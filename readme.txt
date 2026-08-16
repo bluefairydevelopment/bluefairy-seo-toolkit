@@ -77,6 +77,12 @@ No. The plugin adds two lightweight hooks: one action on `wp_head` (priority 2) 
 
 The plugin works on single-site installs. Multisite support (network-wide activation, per-subsite sitemaps) is available in the Pro version.
 
+== Screenshots ==
+
+1. The flat XML sitemap at /sitemap.xml — all published posts and pages with lastmod and changefreq.
+2. Open Graph meta tags injected into a post's &lt;head&gt;: og:title, og:description, og:url, og:type, og:site_name.
+3. The plugin row in Plugins > Installed Plugins — no settings required, auto-pauses when a competing SEO plugin is detected.
+
 == Changelog ==
 
 = 1.0.0 =
