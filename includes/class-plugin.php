@@ -100,7 +100,7 @@ final class BlueFairy_SEO_Toolkit_Lite_Plugin {
             sprintf(
                 /* translators: %s: comma-separated list of conflicting plugin names */
                 esc_html__( 'Output paused because %s is active. Both plugins would write Open Graph tags and sitemaps — keeping only one active prevents duplicate meta output that breaks social crawlers.', 'bluefairy-seo-toolkit-lite' ),
-                $names // already escaped above
+                $names // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped via esc_html() on line 95
             )
         );
     }
