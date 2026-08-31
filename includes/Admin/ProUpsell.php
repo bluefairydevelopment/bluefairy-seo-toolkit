@@ -79,13 +79,14 @@ final class ProUpsell {
         <div class="bfst-pro-callout" style="margin-top:2rem;padding:1rem 1.25rem;background:#eff6ff;border:1px solid #bfdbfe;border-radius:4px;max-width:46rem;">
             <h2 style="margin-top:0;font-size:1rem;"><?php esc_html_e( 'BlueFairy SEO Toolkit Pro', 'bluefairy-seo-toolkit' ); ?></h2>
             <p style="margin-bottom:0.5rem;">
-                <?php esc_html_e( 'This plugin handles Open Graph tags and your XML sitemap. Pro adds the parts search engines act on:', 'bluefairy-seo-toolkit' ); ?>
+                <?php esc_html_e( 'This plugin handles Open Graph tags, URL cleaning and your XML sitemap. Pro adds the parts search engines act on:', 'bluefairy-seo-toolkit' ); ?>
             </p>
             <ul style="margin:0 0 0.75rem 1.25rem;list-style:disc;">
                 <li><?php esc_html_e( 'JSON-LD schema markup — Article, Product, Organization, BreadcrumbList and more, in one @graph block', 'bluefairy-seo-toolkit' ); ?></li>
-                <li><?php esc_html_e( 'Canonical URL management, stripping UTM, fbclid and gclid so ranking signals consolidate on the clean URL', 'bluefairy-seo-toolkit' ); ?></li>
+                <li><?php esc_html_e( 'og:image, so shared links stop rendering as text-only cards, plus Twitter Cards', 'bluefairy-seo-toolkit' ); ?></li>
+                <li><?php esc_html_e( 'A canonical tag of your own, with core\'s duplicate removed and per-post overrides', 'bluefairy-seo-toolkit' ); ?></li>
                 <li><?php esc_html_e( 'A per-post SEO meta box: schema type, custom OG image, canonical override, sitemap exclusion', 'bluefairy-seo-toolkit' ); ?></li>
-                <li><?php esc_html_e( 'Twitter Cards with an image fallback chain, and taxonomy sitemaps with image extensions', 'bluefairy-seo-toolkit' ); ?></li>
+                <li><?php esc_html_e( 'Sitemaps for every post type and taxonomy, with Google image extensions', 'bluefairy-seo-toolkit' ); ?></li>
             </ul>
             <p style="margin-bottom:0;">
                 <a href="<?php echo esc_url( self::PRODUCT_URL ); ?>" target="_blank" rel="noopener noreferrer" class="button button-primary">
