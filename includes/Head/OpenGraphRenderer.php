@@ -117,8 +117,17 @@ class OpenGraphRenderer implements RendererInterface {
         if ( $content === '' ) {
             return '';
         }
+
+        // Open Graph and its extensions (article:*, product:*) are RDFa and use
+        // the `property` attribute. Twitter Cards are not RDFa: the Twitter
+        // Card spec and its validator both want `name`. Emitting
+        // <meta property="twitter:card"> shipped a headline Pro feature in a
+        // form the tool that checks it does not look for.
+        $attribute = str_starts_with( $property, 'twitter:' ) ? 'name' : 'property';
+
         return sprintf(
-            '<meta property="%s" content="%s">',
+            '<meta %s="%s" content="%s">',
+            $attribute,
             esc_attr( $property ),
             esc_attr( $content )
         );
