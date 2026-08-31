@@ -1,0 +1,8 @@
+parameters:
+  phpVersion: 80100
+  level: 6
+  paths:
+    - includes/
+  bootstrapFiles:
+    - vendor/szepeviktor/phpstan-wordpress/bootstrap.php
+    - vendor/php-stubs/woocommerce-stubs/woocommerce-stubs.php
