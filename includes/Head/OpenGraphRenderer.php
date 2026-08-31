@@ -34,7 +34,35 @@ class OpenGraphRenderer implements RendererInterface {
     /**
      * {@inheritdoc}
      */
+    /**
+     * Is this a page type where Open Graph tags would be wrong?
+     *
+     * @param PageContext $ctx
+     * @return bool
+     */
+    protected static function is_suppressed_context( PageContext $ctx ): bool {
+        if ( in_array( $ctx->type, [ '404', 'search' ], true ) ) {
+            return true;
+        }
+        return is_404() || is_search() || is_feed();
+    }
+
     public function render( PageContext $ctx ): string {
+        // 404s, search results and feeds are not documents, and describing them
+        // with og:title and og:site_name tells a crawler that an error page is
+        // a shareable thing on this site.
+        //
+        // The readme and the features guide have both promised this suppression
+        // since 1.0.0 and the renderer never implemented it: PageContext worked
+        // out that the page was a 404 and nothing ever asked. Every 404 on every
+        // install carried three Open Graph tags.
+        //
+        // Guarded in render(), not build_tags(), so the Pro subclass inherits it
+        // — Pro overrides build_tags() and would otherwise re-open the hole.
+        if ( self::is_suppressed_context( $ctx ) ) {
+            return '';
+        }
+
         $tags = $this->build_tags( $ctx );
 
         $output = implode( "\n", array_filter( $tags ) );

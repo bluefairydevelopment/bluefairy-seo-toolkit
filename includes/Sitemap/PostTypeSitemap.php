@@ -158,6 +158,35 @@ class PostTypeSitemap {
      * @return int
      */
     /**
+     * How often a crawler should expect this URL to change, from its age.
+     *
+     * The 1.0.0 flat sitemap emitted this and the 1.1.0 rewrite dropped it,
+     * while the readme, the features guide, MARKETING.txt and the generated PDF
+     * all went on describing the exact thresholds below. Restoring it is
+     * cheaper and more honest than editing four documents to say the plugin no
+     * longer does something it used to.
+     *
+     * @param \WP_Post $post
+     * @return string One of daily, weekly, monthly.
+     */
+    protected static function changefreq_for( \WP_Post $post ): string {
+        $modified = (int) strtotime( $post->post_modified_gmt );
+        if ( $modified <= 0 ) {
+            return 'monthly';
+        }
+
+        $age_days = ( time() - $modified ) / DAY_IN_SECONDS;
+
+        if ( $age_days < 7 ) {
+            return 'daily';
+        }
+        if ( $age_days < 90 ) {
+            return 'weekly';
+        }
+        return 'monthly';
+    }
+
+    /**
      * Exclude WooCommerce products the store owner has hidden.
      *
      * Catalog visibility has lived in the `product_visibility` taxonomy since
@@ -278,6 +307,7 @@ class PostTypeSitemap {
             $lines[] = '  <url>';
             $lines[] = '    <loc>' . esc_url( $permalink ) . '</loc>';
             $lines[] = '    <lastmod>' . esc_html( $lastmod ) . '</lastmod>';
+            $lines[] = '    <changefreq>' . esc_html( self::changefreq_for( $post ) ) . '</changefreq>';
 
             foreach ( $this->extra_url_lines( $post->ID ) as $line ) {
                 $lines[] = $line;
