@@ -1,0 +1,162 @@
+BLUEFAIRY SEO TOOLKIT (FREE) — MARKETING COPY
+=============================================
+
+Source of truth for the FREE half of the pair. The Pro half has its own file at
+../bluefairy-seo-toolkit-pro/docs/MARKETING.txt. The feature comparison table
+both of them use lives in COMPARISON.md next to this file — do not restate it
+from memory.
+
+
+3-SENTENCE SUMMARY
+------------------
+
+BlueFairy SEO Toolkit gives a WordPress site the two things it cannot do
+without — Open Graph tags so shared links render properly, and a paginated XML
+sitemap at /sitemap_index.xml so search engines can find every post and page —
+and asks you to configure neither. It detects Yoast SEO, Rank Math, SEOPress and
+The SEO Framework and pauses its own output automatically, so installing it can
+never give you duplicate meta tags. Free, GPL-2.0-or-later, PHP 8.1+, WordPress
+6.6+; add BlueFairy SEO Toolkit Pro when you want JSON-LD schema, canonical
+management, og:image and the per-post SEO meta box.
+
+
+POSITIONING
+-----------
+
+This is the honest, complete free plugin, not a crippled demo. It does Open
+Graph and sitemaps properly and says plainly what it does not do. The upgrade
+argument is never "unlock the plugin you already installed" — it is "you now
+have the basics; here is the structured data and the image tag you still
+don't."
+
+Say "add Pro", never "upgrade to Pro". Pro is an add-on that runs alongside
+this plugin. "Upgrade" reads as a replacement and sets up a support ticket
+when the customer deactivates the free plugin and everything stops.
+
+
+CSS CLASS PREFIX
+----------------
+
+bfst   (BlueFairy SEO Toolkit)
+
+All classes in the product description HTML, hub page, FAQ page, and sidebar
+widget card use this prefix to avoid collisions.
+
+
+HTML LONG DESCRIPTION
+---------------------
+
+(Used as the WooCommerce product long description for the FREE product.
+Classes match the .bfst-sp-desc .bfst-dc-* rules in
+single-product-bluefairy-seo-toolkit.html)
+
+<div class="bfst-dc-grid">
+
+  <div class="bfst-dc-card">
+    <div class="bfst-dc-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b5fc0" stroke-width="2"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+    </div>
+    <h3>Open Graph tags</h3>
+    <p>Five tags on every page that should have them &mdash; <code>og:title</code>, <code>og:description</code>, <code>og:url</code>, <code>og:type</code> and <code>og:site_name</code> &mdash; and none at all on 404s, search results and feeds, where they would describe something that is not a real document.</p>
+  </div>
+
+  <div class="bfst-dc-card">
+    <div class="bfst-dc-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b5fc0" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+    </div>
+    <h3>Paginated XML sitemaps</h3>
+    <p>A sitemap index at <code>/sitemap_index.xml</code> with one child file per post type, split at 1,000 URLs per file. Every entry carries <code>lastmod</code> and an age-derived <code>changefreq</code>.</p>
+  </div>
+
+  <div class="bfst-dc-card">
+    <div class="bfst-dc-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b5fc0" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    </div>
+    <h3>Never a duplicate tag</h3>
+    <p>Detects Yoast SEO, Rank Math, SEOPress and The SEO Framework and pauses its own output the moment it finds one, with a single admin notice naming what it saw. Two <code>og:title</code> tags are worse than none &mdash; crawlers may take either.</p>
+  </div>
+
+  <div class="bfst-dc-card">
+    <div class="bfst-dc-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b5fc0" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+    </div>
+    <h3>Clean URLs in every tag</h3>
+    <p>Campaign and filter parameters are stripped before the URL is written: anything starting <code>utm_</code>, plus <code>fbclid</code>, <code>gclid</code>, WooCommerce filter and variation parameters, and WordPress comment internals.</p>
+  </div>
+
+  <div class="bfst-dc-card">
+    <div class="bfst-dc-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b5fc0" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9z"/></svg>
+    </div>
+    <h3>Cached, and correct about it</h3>
+    <p>The index caches for an hour and each sitemap for a day, through the transient API so it behaves on Redis and Memcached. Saving, trashing or deleting a post clears the cache immediately &mdash; new posts do not wait for an expiry.</p>
+  </div>
+
+  <div class="bfst-dc-card">
+    <div class="bfst-dc-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b5fc0" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+    </div>
+    <h3>Two settings, and that is all</h3>
+    <p>Switch either subsystem off, and tick any post type or taxonomy you want kept out of the sitemap. Nothing else needs an opinion from you, so there is nothing else to get wrong.</p>
+  </div>
+
+</div>
+
+<div class="bfst-dc-shots">
+  <figure>
+    <img src="/wp-content/uploads/2026/08/SeoToolkitSettings.png" alt="BlueFairy SEO Toolkit settings page showing the Open Graph and XML Sitemaps feature toggles and the sitemap exclusions list">
+    <figcaption>Settings &rarr; SEO &mdash; two feature toggles and per-post-type sitemap exclusions</figcaption>
+  </figure>
+  <figure>
+    <img src="/wp-content/uploads/2026/08/SeoToolkitSitemapIndex.png" alt="The XML sitemap index at /sitemap_index.xml listing the post and page sitemaps">
+    <figcaption>The sitemap index at /sitemap_index.xml, paginated at 1,000 URLs per file</figcaption>
+  </figure>
+  <figure>
+    <img src="/wp-content/uploads/2026/08/SeoToolkitOgTags.png" alt="Page source showing the five Open Graph meta tags written into the document head">
+    <figcaption>The five Open Graph tags, written into the head of every real document</figcaption>
+  </figure>
+</div>
+
+<div class="bfst-dc-included">
+  <h3>What&rsquo;s included</h3>
+  <ul>
+    <li>Open Graph: og:title, og:description, og:url, og:type, og:site_name</li>
+    <li>Output suppressed on 404, search and feed pages</li>
+    <li>Description fallback: excerpt &rarr; first 155 characters of content &rarr; site tagline</li>
+    <li>Sitemap index at /sitemap_index.xml with per-post-type child sitemaps</li>
+    <li>Posts and pages, paginated at 1,000 URLs per file</li>
+    <li>lastmod from post_modified_gmt; changefreq derived from post age</li>
+    <li>Correct headers: application/xml and X-Robots-Tag: noindex</li>
+    <li>Transient caching with automatic invalidation on save, trash and delete</li>
+    <li>Site-wide sitemap exclusions per post type and taxonomy</li>
+    <li>URL cleaning: utm_*, fbclid, gclid, WooCommerce filter and variation params</li>
+    <li>Conflict detection: Yoast SEO, Rank Math, SEOPress, The SEO Framework</li>
+    <li>Clean uninstall &mdash; removes every option and transient it created</li>
+    <li>GPL-2.0-or-later &middot; PHP 8.1+ &middot; WordPress 6.6+</li>
+  </ul>
+</div>
+
+
+SHORT DESCRIPTION (WooCommerce)
+-------------------------------
+
+Open Graph tags and a paginated XML sitemap, with nothing to configure. Pauses
+itself automatically if Yoast, Rank Math, SEOPress or The SEO Framework is
+active, so you can never end up with duplicate tags. Free and GPL.
+
+
+WHAT THIS PLUGIN DOES NOT DO
+----------------------------
+
+State these plainly wherever the plugin is described. They are the upgrade
+argument, and hiding them only produces refund requests.
+
+- No og:image. Shared links render as text-only cards.
+- No JSON-LD schema markup of any kind.
+- No <link rel="canonical"> tag; core's own tag stays as it is.
+- No per-post controls — there is no meta box.
+- Sitemaps cover posts and pages only, with no taxonomy archives and no image
+  extensions.
+
+All five are in Pro. See COMPARISON.md for the full table, and note in
+particular that URL cleaning is a FREE feature — do not write it as a Pro one.

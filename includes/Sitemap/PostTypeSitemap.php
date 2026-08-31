@@ -157,6 +157,39 @@ class PostTypeSitemap {
      * @param string $post_type
      * @return int
      */
+    /**
+     * Exclude WooCommerce products the store owner has hidden.
+     *
+     * Catalog visibility has lived in the `product_visibility` taxonomy since
+     * WooCommerce 3.0 (2017). This plugin shipped a meta_query against the
+     * `_visibility` post meta key instead, which WooCommerce stopped writing
+     * eight years ago: on WooCommerce 11 the only rows carrying it are legacy
+     * leftovers, all of them reading "visible". The condition therefore
+     * excluded nothing, and products marked Hidden appeared in the sitemap.
+     *
+     * `NOT IN` is safe here despite the usual warning about nullable subquery
+     * columns: WordPress compiles it to `ID NOT IN (SELECT object_id ...)` over
+     * the relationships table, whose object_id is never NULL, and a product
+     * carrying no visibility terms simply is not in the subquery.
+     *
+     * @param string $post_type
+     * @return array<int, array<string, mixed>> A tax_query, or [] when not applicable.
+     */
+    protected static function visibility_tax_query( string $post_type ): array {
+        if ( $post_type !== 'product' || ! taxonomy_exists( 'product_visibility' ) ) {
+            return [];
+        }
+
+        return [
+            [
+                'taxonomy' => 'product_visibility',
+                'field'    => 'slug',
+                'terms'    => [ 'exclude-from-catalog', 'exclude-from-search' ],
+                'operator' => 'NOT IN',
+            ],
+        ];
+    }
+
     protected function page_count( string $post_type ): int {
         $query = new \WP_Query(
             [
@@ -171,6 +204,10 @@ class PostTypeSitemap {
                 'meta_query'             => [
                     [ 'key' => '_bfst_exclude_sitemap', 'compare' => 'NOT EXISTS' ],
                 ],
+                // Must match build_xml() exactly. When it did not, the index
+                // advertised a page count computed over a larger set than the
+                // pages themselves contained.
+                'tax_query'              => self::visibility_tax_query( $post_type ),
             ]
         );
 
@@ -200,21 +237,9 @@ class PostTypeSitemap {
             ],
         ];
 
-        // WooCommerce: exclude hidden and search-only products from sitemap.
-        if ( $post_type === 'product' && function_exists( 'wc_get_product' ) ) {
-            $query_args['meta_query'][] = [
-                'relation' => 'AND',
-                [
-                    'relation' => 'OR',
-                    [ 'key' => '_visibility', 'value' => 'hidden', 'compare' => '!=' ],
-                    [ 'key' => '_visibility', 'compare' => 'NOT EXISTS' ],
-                ],
-                [
-                    'relation' => 'OR',
-                    [ 'key' => '_visibility', 'value' => 'search', 'compare' => '!=' ],
-                    [ 'key' => '_visibility', 'compare' => 'NOT EXISTS' ],
-                ],
-            ];
+        $visibility = self::visibility_tax_query( $post_type );
+        if ( $visibility !== [] ) {
+            $query_args['tax_query'] = $visibility;
         }
 
         $query = new \WP_Query( $query_args );

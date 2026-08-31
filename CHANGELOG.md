@@ -1,9 +1,36 @@
 # Changelog
 
-All notable changes to BlueFairy SEO Toolkit Lite are documented here.
+All notable changes to BlueFairy SEO Toolkit are documented here.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Versioning follows [Semantic Versioning](https://semver.org/): major = architecture change, minor = new feature, patch = bug fix or security fix.
+
+---
+
+## [1.1.0] — 2026-08-30
+
+Rebuilt as the free base plugin of a free/Pro pair. BlueFairy SEO Toolkit Pro
+is now an add-on that extends these classes rather than a separate plugin that
+duplicates them.
+
+### Added
+- Sitemap index at `/sitemap_index.xml` with paginated per-post-type children at `/sitemap-{post-type}-{n}.xml`, 1,000 URLs per file, replacing the single flat `/sitemap.xml`.
+- Settings page at **Settings → SEO**: feature toggles for Open Graph and XML Sitemaps, and sitemap exclusions per post type and per taxonomy.
+- URL cleaning before a URL is written into `og:url` — `utm_*`, `fbclid`, `gclid`, `attribute_pa_*`, WooCommerce filter and variation parameters, and WordPress comment parameters.
+- Documented extension points so an add-on can extend the plugin: the `bfst_loaded` action, `bfst_register_head_renderers`, `bfst_feature_labels`, `bfst_sitemap_post_types`, `bfst_render_sitemap`, `bfst_settings_page_footer`, and `SitemapManager::set_handler()`.
+- A "Get SEO Toolkit Pro" link in the plugins-list row and a callout beneath the settings form, both hidden while Pro is active.
+
+### Changed
+- `og:image` has been removed from this plugin. The image tag and its fallback chain are part of SEO Toolkit Pro.
+- Sitemap caching now goes through the transient API with a tracked key index.
+
+### Fixed
+- Unauthenticated requests for non-existent sitemaps each wrote a transient, so anyone could flood the cache. Bogus sitemap URLs now return 404 and cache nothing.
+- Cache invalidation deleted rows from the options table directly, so it did nothing at all on sites using Redis or Memcached as an external object cache.
+- Sitemap queries requested `post_status = 'publish'` for every post type, so attachment sitemaps were advertised in the index and then 404ed by the router. Each post type's real status is now used.
+- Hidden WooCommerce products were not excluded from the sitemap. The exclusion tested the `_visibility` post meta key, which WooCommerce stopped writing in 3.0 and now leaves empty; it reads the `product_visibility` taxonomy instead. The same exclusion is now applied when counting pages, which it previously was not — so the index could advertise more pages than existed.
+- 16 translation strings used the wrong text domain and were never translated.
+- Sitemap output escaping, multisite-safe pagination, readme headers, and a double-bind guard on head renderer registration.
 
 ---
 
