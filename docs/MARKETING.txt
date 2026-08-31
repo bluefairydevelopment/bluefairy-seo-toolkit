@@ -104,11 +104,11 @@ single-product-bluefairy-seo-toolkit.html)
 
 <div class="bfst-dc-shots">
   <figure>
-    <img src="/wp-content/uploads/2026/08/SeoToolkitSettings.png" alt="BlueFairy SEO Toolkit settings page showing the Open Graph and XML Sitemaps feature toggles and the sitemap exclusions list">
+    <img src="/wp-content/uploads/2026/08/SeoToolkitSettings-1.png" alt="BlueFairy SEO Toolkit settings page showing the Open Graph and XML Sitemaps feature toggles and the sitemap exclusions list">
     <figcaption>Settings &rarr; SEO &mdash; two feature toggles and per-post-type sitemap exclusions</figcaption>
   </figure>
   <figure>
-    <img src="/wp-content/uploads/2026/08/SeoToolkitSitemapIndex.png" alt="The XML sitemap index at /sitemap_index.xml listing the post and page sitemaps">
+    <img src="/wp-content/uploads/2026/08/SeoToolkitSitemapIndex-1.png" alt="The XML sitemap index at /sitemap_index.xml listing the post and page sitemaps">
     <figcaption>The sitemap index at /sitemap_index.xml, paginated at 1,000 URLs per file</figcaption>
   </figure>
   <figure>
