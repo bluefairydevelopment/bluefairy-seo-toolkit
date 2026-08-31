@@ -44,6 +44,11 @@ final class HeadManager {
     private static array $renderers = [];
 
     /**
+     * Whether register() has already bound the renderers to wp_head.
+     */
+    private static bool $registered = false;
+
+    /**
      * Per-request cache for bfst_features option.
      *
      * @var array<string, mixed>|null
@@ -55,6 +60,13 @@ final class HeadManager {
      * Also registers the PageContext initialiser on the wp hook.
      */
     public static function register(): void {
+        // Binding twice would emit every tag twice. Cheap to guard, and the
+        // guard is what makes the static renderer registry safe to keep.
+        if ( self::$registered ) {
+            return;
+        }
+        self::$registered = true;
+
         PageContext::init();
 
         // Open Graph is the base plugin's own head output.

@@ -27,12 +27,33 @@ $bfst_option_keys = [
 // the Pro add-on, which removes these keys in its own uninstall.
 $bfst_meta_keys = [];
 
-// Multisite awareness: iterate sites in batches (capped at 100 per uninstall run).
-$bfst_sites = function_exists( 'get_sites' ) ? get_sites( [ 'number' => 100 ] ) : [ null ];
+// Multisite awareness: page through EVERY site.
+//
+// This used to be get_sites( [ 'number' => 100 ] ), which silently left sites
+// 101 and beyond holding all of this plugin's options and post meta — on
+// exactly the networks big enough for it to matter, and with nothing to say it
+// had happened.
+$bfst_site_ids = [ null ];
+if ( function_exists( 'get_sites' ) && function_exists( 'switch_to_blog' ) ) {
+    $bfst_site_ids = [];
+    $bfst_offset   = 0;
+    do {
+        $bfst_batch = get_sites(
+            [
+                'number'  => 200,
+                'offset'  => $bfst_offset,
+                'fields'  => 'ids',
+                'orderby' => 'id',
+            ]
+        );
+        $bfst_site_ids = array_merge( $bfst_site_ids, $bfst_batch );
+        $bfst_offset  += 200;
+    } while ( count( $bfst_batch ) === 200 );
+}
 
-foreach ( $bfst_sites as $bfst_site ) {
+foreach ( $bfst_site_ids as $bfst_site ) {
     if ( $bfst_site ) {
-        switch_to_blog( $bfst_site->blog_id );
+        switch_to_blog( (int) $bfst_site );
     }
 
     foreach ( $bfst_option_keys as $bfst_key ) {

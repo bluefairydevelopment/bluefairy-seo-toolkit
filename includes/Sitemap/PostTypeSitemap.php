@@ -31,7 +31,7 @@ class PostTypeSitemap {
     /**
      * Posts per sitemap page.
      */
-    private const POSTS_PER_PAGE = 1000;
+    protected const POSTS_PER_PAGE = 1000;
 
     /**
      * Register cache invalidation hooks.
@@ -118,11 +118,63 @@ class PostTypeSitemap {
             return $cached;
         }
 
+        // Refuse pages past the end of the result set.
+        //
+        // The rewrite rule accepts any number of digits and nothing bounded it,
+        // so /sitemap-post-900001.xml used to return 200, run a WP_Query with a
+        // 900-million-row offset, and cache the empty result for a day. Five
+        // such requests wrote five rows into wp_options; there was no limit on
+        // how many an unauthenticated visitor could add.
+        //
+        // The COUNT below is indexed and cheap. It is paid once per uncached
+        // page, and it replaces an offset scan that is not.
+        if ( $page > $this->page_count( $post_type ) ) {
+            return '';
+        }
+
         $xml = $this->build_xml( $post_type, $page );
 
+        // Never cache a page with no URLs in it. Anything that reaches here
+        // empty is a page the count said should exist, so it is a race with a
+        // deletion rather than a request to be trusted — and caching it would
+        // hide the real content for a day.
+        if ( ! str_contains( $xml, '<url>' ) ) {
+            return '';
+        }
+
         set_transient( $transient_key, $xml, DAY_IN_SECONDS );
+        SitemapManager::remember_cache_key( $transient_key );
 
         return $xml;
+    }
+
+    /**
+     * How many pages this post type's sitemap actually has.
+     *
+     * Always at least 1, so an empty post type still resolves to a valid
+     * (empty) first page rather than 404ing the URL the index advertises.
+     *
+     * @param string $post_type
+     * @return int
+     */
+    protected function page_count( string $post_type ): int {
+        $query = new \WP_Query(
+            [
+                'post_type'              => $post_type,
+                'post_status'            => 'publish',
+                'posts_per_page'         => 1,
+                'fields'                 => 'ids',
+                'no_found_rows'          => false,
+                'update_post_term_cache' => false,
+                'update_post_meta_cache' => false,
+                'has_password'           => false,
+                'meta_query'             => [
+                    [ 'key' => '_bfst_exclude_sitemap', 'compare' => 'NOT EXISTS' ],
+                ],
+            ]
+        );
+
+        return max( 1, (int) ceil( (int) $query->found_posts / self::POSTS_PER_PAGE ) );
     }
 
     /**

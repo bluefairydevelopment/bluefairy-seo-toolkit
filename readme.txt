@@ -1,14 +1,14 @@
-=== BlueFairy SEO Toolkit Lite ===
+=== BlueFairy SEO Toolkit ===
 Contributors: bluefairydevelopment
 Tags: seo, open graph, sitemap, xml sitemap, social media
 Requires at least: 6.6
-Tested up to: 7.0
+Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 1.0.0
+Stable tag: 1.1.0
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Essential Open Graph tags and a flat XML sitemap — no bloat. Automatically pauses when Yoast SEO, Rank Math, SEOPress, or The SEO Framework is active.
+Open Graph tags and XML sitemaps — no bloat, no configuration. Pauses automatically when another SEO plugin is active.
 
 == Description ==
 

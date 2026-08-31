@@ -39,11 +39,19 @@ final class FeatureToggleEndpoint {
     private const ROUTE = '/feature-toggle';
 
     /**
-     * Valid feature keys (enum for REST arg validation).
+     * Feature keys this endpoint will accept.
      *
-     * @var string[]
+     * Read from SettingsPage rather than frozen here. This used to be a literal
+     * list containing 'schema' and 'canonical' — two features the free plugin
+     * does not have — which happened to work only because it was a superset of
+     * what the settings page rendered. Any add-on registering a new feature got
+     * a conflict toggle that rendered and then 400'd on click.
+     *
+     * @return string[]
      */
-    private const FEATURE_KEYS = [ 'schema', 'og', 'canonical', 'sitemap' ];
+    private static function feature_keys(): array {
+        return array_keys( SettingsPage::feature_labels() );
+    }
 
     /**
      * Register the REST route.
@@ -68,10 +76,10 @@ final class FeatureToggleEndpoint {
                     'feature' => [
                         'type'              => 'string',
                         'required'          => true,
-                        'enum'              => self::FEATURE_KEYS,
+                        'enum'              => self::feature_keys(),
                         'sanitize_callback' => 'sanitize_text_field',
-                        'validate_callback' => static fn( $val ) => in_array( $val, self::FEATURE_KEYS, true ),
-                        'description'       => 'The feature to toggle (schema, og, canonical, sitemap).',
+                        'validate_callback' => static fn( $val ) => in_array( $val, self::feature_keys(), true ),
+                        'description'       => 'The feature to toggle. Values come from the registered feature list.',
                     ],
                     'enabled' => [
                         'type'        => 'boolean',
@@ -97,7 +105,7 @@ final class FeatureToggleEndpoint {
         $enabled = (bool) $request->get_param( 'enabled' );
 
         // Validate feature key (belt-and-suspenders beyond REST schema enum).
-        if ( ! in_array( $feature, self::FEATURE_KEYS, true ) ) {
+        if ( ! in_array( $feature, self::feature_keys(), true ) ) {
             return new WP_REST_Response(
                 [ 'success' => false, 'message' => 'Invalid feature key.' ],
                 400

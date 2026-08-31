@@ -77,17 +77,69 @@ class SitemapManager {
      *
      * @since 1.1.0
      */
-    public static function flush_caches(): void {
-        global $wpdb;
+    /**
+     * Option holding the keys of every sitemap transient currently set.
+     */
+    private const CACHE_INDEX_OPTION = 'bfst_sitemap_cache_keys';
 
+    /**
+     * Record a sitemap transient key so it can be deleted later.
+     *
+     * @param string $key Transient key, without the _transient_ prefix.
+     */
+    public static function remember_cache_key( string $key ): void {
+        $keys = get_option( self::CACHE_INDEX_OPTION, [] );
+        if ( ! is_array( $keys ) ) {
+            $keys = [];
+        }
+        if ( ! in_array( $key, $keys, true ) ) {
+            $keys[] = $key;
+            update_option( self::CACHE_INDEX_OPTION, $keys, false );
+        }
+    }
+
+    /**
+     * Drop every cached sitemap, index included.
+     *
+     * Needed whenever the SHAPE of the sitemap changes rather than its
+     * contents — activating or deactivating an add-on that widens the scope,
+     * for instance. The per-post invalidation hooks cannot see that: they fire
+     * on save_post and only clear the pages for that post's type. Without this,
+     * dropping the Pro add-on left the index advertising taxonomy sitemaps that
+     * had started returning 404, for up to a day.
+     *
+     * Deletion goes through delete_transient() against a recorded index of
+     * keys, because that is the only method correct on BOTH backends. An
+     * earlier version swept wp_options with a LIKE query, which finds nothing
+     * on any site running Redis or Memcached — transients never reach the
+     * options table there, so the flush silently did nothing on exactly the
+     * sites most likely to be caching hard. The SQL sweep is kept afterwards
+     * as a mop-up for keys written before this index existed.
+     *
+     * @since 1.1.0
+     */
+    public static function flush_caches(): void {
         SitemapIndex::invalidate();
 
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
-        $keys = $wpdb->get_col(
-            "SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE '_transient_bfst_sitemap_%'"
-        );
-        foreach ( (array) $keys as $key ) {
-            delete_transient( (string) preg_replace( '/^_transient_/', '', (string) $key ) );
+        $keys = get_option( self::CACHE_INDEX_OPTION, [] );
+        if ( is_array( $keys ) ) {
+            foreach ( $keys as $key ) {
+                delete_transient( (string) $key );
+            }
+        }
+        delete_option( self::CACHE_INDEX_OPTION );
+
+        // Mop up anything cached before the index existed. Only ever finds
+        // rows on sites without an external object cache; harmless elsewhere.
+        if ( ! wp_using_ext_object_cache() ) {
+            global $wpdb;
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+            $stale = $wpdb->get_col(
+                "SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE '_transient_bfst_sitemap_%'"
+            );
+            foreach ( (array) $stale as $name ) {
+                delete_transient( (string) preg_replace( '/^_transient_/', '', (string) $name ) );
+            }
         }
     }
 
@@ -212,8 +264,15 @@ class SitemapManager {
         if ( in_array( $sitemap, self::post_types(), true ) ) {
             $class   = self::$handlers['post_type'];
             $handler = new $class();
-            echo $handler->render( $sitemap, $page ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- XML output
-            exit;
+            $output  = $handler->render( $sitemap, $page );
+
+            // An empty string means the page is past the end of the sitemap.
+            // Fall through to the 404 below rather than serving an empty 200,
+            // which is what let /sitemap-post-900001.xml look like a real page.
+            if ( $output !== '' ) {
+                echo $output; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- XML output
+                exit;
+            }
         }
 
         /**

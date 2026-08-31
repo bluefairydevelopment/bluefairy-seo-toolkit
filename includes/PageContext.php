@@ -211,9 +211,18 @@ final class PageContext {
         }
 
         // 1. Custom override from post meta.
-        $override = $this->post_meta['_bfst_canonical'] ?? '';
-        if ( ! empty( $override ) ) {
-            return esc_url_raw( (string) $override );
+        //
+        // Only honoured if it survives sanitisation. It used to return the
+        // sanitised value unconditionally, so an override that esc_url_raw()
+        // rejects — a javascript: URI written by an importer or WP-CLI, say —
+        // produced an EMPTY canonical on a page that has a perfectly good
+        // permalink. Fall through instead of suppressing the tag.
+        $override = (string) ( $this->post_meta['_bfst_canonical'] ?? '' );
+        if ( $override !== '' ) {
+            $safe_override = esc_url_raw( $override );
+            if ( $safe_override !== '' ) {
+                return $safe_override;
+            }
         }
 
         // 2. WordPress permalink.
