@@ -144,6 +144,22 @@ class SitemapManager {
     }
 
     /**
+     * The post status a sitemap query should ask for.
+     *
+     * Attachments are stored as 'inherit', never 'publish'. Every sitemap query
+     * asked for 'publish', so an attachment sitemap could not contain a single
+     * URL — invisible while attachments were out of scope, and the moment they
+     * came into scope the index advertised a sitemap the router answered with
+     * a 404.
+     *
+     * @param string $post_type
+     * @return string
+     */
+    public static function post_status_for( string $post_type ): string {
+        return 'attachment' === $post_type ? 'inherit' : 'publish';
+    }
+
+    /**
      * Register SitemapManager hooks on plugins_loaded.
      *
      * Called from Plugin::boot(). Registers rules on init, query_vars filter,

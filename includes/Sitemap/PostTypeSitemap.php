@@ -161,7 +161,7 @@ class PostTypeSitemap {
         $query = new \WP_Query(
             [
                 'post_type'              => $post_type,
-                'post_status'            => 'publish',
+                'post_status'            => SitemapManager::post_status_for( $post_type ),
                 'posts_per_page'         => 1,
                 'fields'                 => 'ids',
                 'no_found_rows'          => false,
@@ -187,7 +187,7 @@ class PostTypeSitemap {
     protected function build_xml( string $post_type, int $page ): string {
         $query_args = [
             'post_type'              => $post_type,
-            'post_status'            => 'publish',
+            'post_status'            => SitemapManager::post_status_for( $post_type ),
             'posts_per_page'         => self::POSTS_PER_PAGE,
             'paged'                  => $page,
             'no_found_rows'          => true,

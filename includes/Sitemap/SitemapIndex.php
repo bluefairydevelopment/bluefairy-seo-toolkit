@@ -123,7 +123,7 @@ class SitemapIndex {
     protected function count_posts( string $post_type ): int {
         $args = [
             'post_type'              => $post_type,
-            'post_status'            => 'publish',
+            'post_status'            => SitemapManager::post_status_for( $post_type ),
             'posts_per_page'         => 1,
             'no_found_rows'          => false,
             'update_post_term_cache' => false,
@@ -155,7 +155,7 @@ class SitemapIndex {
     protected function get_post_type_lastmod( string $post_type ): string {
         $posts = get_posts( [
             'post_type'              => $post_type,
-            'post_status'            => 'publish',
+            'post_status'            => SitemapManager::post_status_for( $post_type ),
             'numberposts'            => 1,
             'orderby'                => 'modified',
             'order'                  => 'DESC',
