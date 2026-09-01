@@ -1,6 +1,6 @@
 # BlueFairy SEO Toolkit — Feature Guide
 
-Version 1.1.0 | GPL-2.0-or-later | PHP 8.1+ | WordPress 6.6+
+Version 1.1.1 | GPL-2.0-or-later | PHP 8.1+ | WordPress 6.6+
 
 BlueFairy SEO Toolkit does two things and does them properly: it writes Open
 Graph tags into your `<head>`, and it serves a paginated XML sitemap. There is
@@ -89,6 +89,35 @@ correctly on sites running Redis or Memcached as an external object cache.
 checkbox. Tick one and it disappears from the sitemap index and stops being
 served. Useful for a post type that exists for internal structure and has no
 business in search results.
+
+### Excluding posts from an add-on (`bfst_sitemap_exclusion_meta_query`)
+
+Added in 1.1.1. The clause that keeps a post out of the sitemap is built once,
+in `SitemapManager::exclusion_meta_query()`, and passed through a filter before
+any query runs:
+
+```php
+add_filter( 'bfst_sitemap_exclusion_meta_query', function ( $meta_query, $post_type ) {
+    $meta_query[] = [ 'key' => '_my_hide_flag', 'compare' => 'NOT EXISTS' ];
+    return $meta_query;
+}, 10, 2 );
+```
+
+Two things worth knowing before you use it:
+
+- The exclusion happens at **query** level, not while the XML is written, so a
+  post removed this way is also absent from the page COUNT. The index and the
+  pages it advertises stay consistent — an index that advertises a page the
+  router then 404s is the failure this avoids.
+- The plugin's own `_bfst_exclude_sitemap` clause is always applied as well.
+  A filter that returns an empty array cannot open the sitemap up to posts the
+  site owner excluded by hand.
+
+Before 1.1.1 the sitemap exposed no filter at all, and the clause was written
+out in three query builders kept in step by a comment. An add-on could set a
+`noindex` robots directive on a post and had no way to take that same post out
+of the sitemap — which Search Console reports as an error, because the sitemap
+is asking a crawler to index a page the page itself refuses.
 
 ### Correct headers
 
@@ -179,7 +208,11 @@ exactly what it does now.
 | Removes WordPress core's duplicate `rel=canonical` tag | Yes | — |
 | Per-post canonical override | Yes | — |
 | Extra strip parameters configurable in Settings | Yes | — |
-| Per-post SEO meta box: schema type, OG image, canonical override, sitemap exclusion | Yes | — |
+| A `<meta name="description">` tag in the page head | Yes | — |
+| Per-post SEO title, replacing the whole document title | Yes | — |
+| Per-post meta description, with excerpt and content fallbacks | Yes | — |
+| Per-post noindex, which also drops the page from the sitemap | Yes | — |
+| Per-post SEO meta box: title, description, noindex, schema type, OG image, canonical override, sitemap exclusion | Yes | — |
 | Sitemap index at `/sitemap_index.xml` | Yes | Yes |
 | Post types included in the sitemap | Every public post type | Posts and pages |
 | Taxonomy sitemaps (categories, tags, custom taxonomies) | Yes | — |
