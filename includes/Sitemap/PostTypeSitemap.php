@@ -16,7 +16,8 @@ namespace BlueFairy\SeoToolkit\Sitemap;
  * - no_found_rows: true (no COUNT(*) query)
  * - update_post_term_cache: false
  * - update_post_meta_cache: false
- * - meta_query NOT EXISTS _bfst_exclude_sitemap (query-level, not PHP filter)
+ * - meta_query from SitemapManager::exclusion_meta_query() (query-level;
+ *   extensible by add-ons via the bfst_sitemap_exclusion_meta_query filter)
  *   so pagination counts are correct
  *
  * WooCommerce visibility: excludes products with _visibility = 'hidden'
@@ -230,9 +231,7 @@ class PostTypeSitemap {
                 'update_post_term_cache' => false,
                 'update_post_meta_cache' => false,
                 'has_password'           => false,
-                'meta_query'             => [
-                    [ 'key' => '_bfst_exclude_sitemap', 'compare' => 'NOT EXISTS' ],
-                ],
+                'meta_query'             => SitemapManager::exclusion_meta_query( $post_type ),
                 // Must match build_xml() exactly. When it did not, the index
                 // advertised a page count computed over a larger set than the
                 // pages themselves contained.
@@ -260,10 +259,9 @@ class PostTypeSitemap {
             'update_post_term_cache' => false,
             'update_post_meta_cache' => false,
             'has_password'           => false,
-            'meta_query'             => [
-                // Query-level exclusion so pagination counts remain correct.
-                [ 'key' => '_bfst_exclude_sitemap', 'compare' => 'NOT EXISTS' ],
-            ],
+            // Query-level exclusion so pagination counts remain correct, and
+            // shared with page_count() so the two cannot drift apart.
+            'meta_query'             => SitemapManager::exclusion_meta_query( $post_type ),
         ];
 
         $visibility = self::visibility_tax_query( $post_type );
