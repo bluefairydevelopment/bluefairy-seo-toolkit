@@ -128,9 +128,7 @@ class SitemapIndex {
             'no_found_rows'          => false,
             'update_post_term_cache' => false,
             'update_post_meta_cache' => false,
-            'meta_query'             => [
-                [ 'key' => '_bfst_exclude_sitemap', 'compare' => 'NOT EXISTS' ],
-            ],
+            'meta_query'             => SitemapManager::exclusion_meta_query( $post_type ),
         ];
 
         // WooCommerce visibility: exclude hidden products.

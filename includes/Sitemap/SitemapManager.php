@@ -160,6 +160,50 @@ class SitemapManager {
     }
 
     /**
+     * The meta_query that keeps excluded posts out of every sitemap.
+     *
+     * Exclusion is done at QUERY level, not by filtering results in PHP, so
+     * found_posts stays consistent with the rows actually emitted. The index
+     * advertises a page count computed from this same query; when the two
+     * diverged, the index advertised a page the router answered with a 404.
+     * That is why this now lives in one place and is called from all three
+     * sites rather than being written out three times and kept in step by a
+     * comment.
+     *
+     * Add-ons extend it through the filter below. Before 1.1.1 there was no
+     * filter anywhere in the sitemap, so SEO Toolkit Pro had no way to keep a
+     * noindexed post out of it — Pro could set the robots tag and nothing else,
+     * leaving the URL advertised in the sitemap while telling crawlers to ignore
+     * it. Search Console reports that combination as an error.
+     *
+     * @since 1.1.1
+     *
+     * @param string $post_type Post type the sitemap is being built for.
+     * @return array<int,array<string,string>> meta_query clauses.
+     */
+    public static function exclusion_meta_query( string $post_type = '' ): array {
+        $meta_query = [
+            [ 'key' => '_bfst_exclude_sitemap', 'compare' => 'NOT EXISTS' ],
+        ];
+
+        /**
+         * Filter the sitemap exclusion meta_query.
+         *
+         * Clauses are ANDed, so each one narrows the set. Anything added here
+         * MUST be safe for the count query too: the page count and the page
+         * contents are built from this same array and have to agree.
+         *
+         * @since 1.1.1
+         *
+         * @param array<int,array<string,string>> $meta_query Clauses so far.
+         * @param string                          $post_type  Post type being built.
+         */
+        $filtered = apply_filters( 'bfst_sitemap_exclusion_meta_query', $meta_query, $post_type );
+
+        return is_array( $filtered ) && $filtered !== [] ? $filtered : $meta_query;
+    }
+
+    /**
      * Register SitemapManager hooks on plugins_loaded.
      *
      * Called from Plugin::boot(). Registers rules on init, query_vars filter,
