@@ -4,7 +4,7 @@ Tags: seo, open graph, sitemap, xml sitemap, social media
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 1.1.0
+Stable tag: 1.1.1
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -113,6 +113,11 @@ Deleting the plugin through the Plugins screen removes every option it created a
 
 == Changelog ==
 
+= 1.1.1 =
+* Added: `bfst_sitemap_exclusion_meta_query` filter, so an add-on can exclude posts from every sitemap. The sitemap previously exposed no filter at all.
+* Changed: the sitemap exclusion clause is now built once in `SitemapManager::exclusion_meta_query()` instead of being repeated in three query builders that had to be kept in step by hand.
+* Compatibility: tested against WordPress 7.1.
+
 = 1.1.0 =
 * Rebuilt as the free base plugin of a pair, with documented extension points so BlueFairy SEO Toolkit Pro can extend it rather than duplicate it.
 * Sitemaps are now a sitemap index at `/sitemap_index.xml` with paginated per-post-type children, replacing the single flat `/sitemap.xml`.
@@ -135,6 +140,9 @@ Deleting the plugin through the Plugins screen removes every option it created a
 * 12-hour transient cache for the sitemap; invalidated on post save/delete/trash.
 
 == Upgrade Notice ==
+
+= 1.1.1 =
+No action required. BlueFairy SEO Toolkit Pro 1.1.1 requires this version — update this plugin first if you use Pro.
 
 = 1.1.0 =
 The sitemap has moved from /sitemap.xml to /sitemap_index.xml — resubmit it in Google Search Console. og:image has moved to SEO Toolkit Pro. Fixes a bug that left hidden WooCommerce products in your sitemap.

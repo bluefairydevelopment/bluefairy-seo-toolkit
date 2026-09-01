@@ -7,6 +7,25 @@ Versioning follows [Semantic Versioning](https://semver.org/): major = architect
 
 ---
 
+## [1.1.1] — 2026-08-31
+
+### Added
+- `bfst_sitemap_exclusion_meta_query` filter on the meta_query that keeps posts
+  out of the sitemap. The sitemap previously exposed no filter at all, so an
+  add-on had no way to exclude a post: SEO Toolkit Pro could set a robots
+  noindex tag and nothing else, leaving the URL advertised in the sitemap while
+  telling crawlers to ignore it — a combination Search Console reports as an
+  error.
+
+### Changed
+- `SitemapManager::exclusion_meta_query()` is now the single source of the
+  exclusion clause, called from `SitemapIndex`, `PostTypeSitemap::page_count()`
+  and `PostTypeSitemap::build_xml()`. The clause was previously written out in
+  all three and kept in step only by a comment. The index advertises a page
+  count computed from the same query the pages are built from, and when the two
+  diverged the index once advertised a page the router answered with a 404.
+- Compatibility: tested against WordPress 7.1.
+
 ## [1.1.0] — 2026-08-30
 
 Rebuilt as the free base plugin of a free/Pro pair. BlueFairy SEO Toolkit Pro
