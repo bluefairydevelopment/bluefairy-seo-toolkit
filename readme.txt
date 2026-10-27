@@ -1,5 +1,6 @@
 === BlueFairy SEO Toolkit ===
 Contributors: bluefairydevelopment
+Donate link: https://ko-fi.com/bluefairydevelopment
 Tags: seo, open graph, sitemap, xml sitemap, social media
 Requires at least: 6.6
 Tested up to: 7.1

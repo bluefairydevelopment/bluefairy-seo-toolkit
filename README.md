@@ -91,3 +91,9 @@ Cache keys are recorded in a tracked index and cleared with `delete_transient()`
 - All output escaped with `esc_attr()`, `esc_url()`, `esc_html()`
 - No output in constructors or `register()` methods — hook registration only
 - PSR-12 formatting
+
+## Support the free plugin
+
+This plugin is free and always will be. If it saves you time, you can [buy us a coffee on Ko-fi](https://ko-fi.com/bluefairydevelopment) ☕ — it helps keep the free plugins tested and maintained.
+
+Found a bug or have an idea? [Open an issue](../../issues/new/choose). Security problems: see [SECURITY.md](SECURITY.md).
