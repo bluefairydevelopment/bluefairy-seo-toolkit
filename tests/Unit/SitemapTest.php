@@ -235,6 +235,30 @@ final class SitemapTest extends TestCase {
 		$this->assertCount( 2, ( new IndexProbe() )->list_entries() );
 	}
 
+	/**
+	 * WPMAP-235: a post type with no published posts must not be advertised.
+	 * The router answers /sitemap-page-1.xml with a 404 when there are no
+	 * pages (render() returns ''), so the index has to skip it to agree.
+	 */
+	public function test_index_skips_a_post_type_with_no_published_posts(): void {
+		$GLOBALS['bfst_wp']['wp_query']['found_posts_by_type'] = [ 'post' => 3, 'page' => 0 ];
+		$GLOBALS['bfst_wp']['get_posts']                       = [ new \WP_Post( (object) [ 'post_modified_gmt' => '2026-02-03 04:05:06' ] ) ];
+		$this->assertSame(
+			[ [ 'loc' => 'https://example.test/sitemap-post-1.xml', 'lastmod' => '2026-02-03' ] ],
+			( new IndexProbe() )->list_entries()
+		);
+
+		// The router agrees: the page sitemap it would have advertised is a 404.
+		$GLOBALS['bfst_wp']['wp_query']['posts'] = [];
+		$this->assertSame( '', ( new PostTypeSitemap() )->render( 'page', 1 ) );
+
+		$GLOBALS['bfst_wp']['wp_query']['found_posts_by_type'] = [ 'post' => 0, 'page' => 0 ];
+		$this->assertSame(
+			"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<sitemapindex xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n</sitemapindex>",
+			( new IndexProbe() )->xml()
+		);
+	}
+
 	public function test_index_render_caches_for_an_hour_and_invalidate_clears_it(): void {
 		$xml = ( new SitemapIndex() )->render();
 		$this->assertSame( $xml, get_transient( 'bfst_sitemap_index' ) );
@@ -300,7 +324,7 @@ final class SitemapTest extends TestCase {
 	public function test_route_serves_the_index_a_post_page_and_filtered_kinds_then_exits(): void {
 		$run = static fn( string $setup ) => self::run_isolated( $setup . "\nBlueFairy\\SeoToolkit\\Sitemap\\SitemapManager::route_sitemap();\necho 'NOT EXITED';" );
 
-		[ $out, $status ] = $run( "\$GLOBALS['bfst_wp']['query_vars']['bfst_sitemap'] = 'index';" );
+		[ $out, $status ] = $run( "\$GLOBALS['bfst_wp']['wp_query']['found_posts'] = 1; \$GLOBALS['bfst_wp']['query_vars']['bfst_sitemap'] = 'index';" );
 		$this->assertSame( 0, $status, $out );
 		$this->assertSame( "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<sitemapindex xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n  <sitemap>\n    <loc>https://example.test/sitemap-post-1.xml</loc>\n    <lastmod>" . gmdate( 'Y-m-d' ) . "</lastmod>\n  </sitemap>\n  <sitemap>\n    <loc>https://example.test/sitemap-page-1.xml</loc>\n    <lastmod>" . gmdate( 'Y-m-d' ) . "</lastmod>\n  </sitemap>\n</sitemapindex>", $out );
 

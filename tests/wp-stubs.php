@@ -159,7 +159,9 @@ if ( ! class_exists( 'WP_Query' ) ) {
 		public function __construct( public array $query_vars = [] ) {
 			$GLOBALS['bfst_wp']['queries'][] = $query_vars;
 			$this->posts       = $GLOBALS['bfst_wp']['wp_query']['posts'];
-			$this->found_posts = $GLOBALS['bfst_wp']['wp_query']['found_posts'];
+			$by_type           = $GLOBALS['bfst_wp']['wp_query']['found_posts_by_type'] ?? [];
+			$type              = is_string( $query_vars['post_type'] ?? null ) ? $query_vars['post_type'] : '';
+			$this->found_posts = $by_type[ $type ] ?? $GLOBALS['bfst_wp']['wp_query']['found_posts'];
 		}
 	}
 }

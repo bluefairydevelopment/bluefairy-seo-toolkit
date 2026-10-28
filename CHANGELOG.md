@@ -7,6 +7,16 @@ Versioning follows [Semantic Versioning](https://semver.org/): major = architect
 
 ---
 
+## [1.1.4] — Unreleased
+
+### Fixed
+- A post type with no published entries was still listed in the sitemap index
+  (a site with no published pages listed `/sitemap-page-1.xml`), and that URL
+  returned a 404, which Search Console reports as an error. The index now
+  leaves out a post type until it has at least one published entry.
+
+---
+
 ## [1.1.3] — 2026-10-28
 
 ### Fixed

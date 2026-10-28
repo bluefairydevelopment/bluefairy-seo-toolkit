@@ -90,8 +90,16 @@ class SitemapIndex {
 
 			// Count at SQL level (meta_query NOT EXISTS) so excluded posts don't
 			// inflate page counts and produce empty trailing sitemap pages.
-			$count      = $this->count_posts( $post_type );
-			$page_count = max( 1, (int) ceil( $count / self::POSTS_PER_PAGE ) );
+			$count = $this->count_posts( $post_type );
+
+			// No published posts: advertise nothing. The router answers
+			// /sitemap-{type}-1.xml with a 404 when the type is empty, and an
+			// index entry that 404s is an error in Search Console (WPMAP-235).
+			if ( $count < 1 ) {
+				continue;
+			}
+
+			$page_count = (int) ceil( $count / self::POSTS_PER_PAGE );
 
 			for ( $page = 1; $page <= $page_count; $page++ ) {
 				$entries[] = [
