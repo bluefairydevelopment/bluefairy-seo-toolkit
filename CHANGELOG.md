@@ -9,6 +9,12 @@ Versioning follows [Semantic Versioning](https://semver.org/): major = architect
 
 ## [1.1.4] — Unreleased
 
+### Changed
+- When the front page shows your latest posts, the home page is now listed in
+  the sitemap, as the first entry of `/sitemap-post-1.xml`. It was missing
+  before. Sites with a static front page are unchanged: that page is already
+  in the page sitemap.
+
 ### Fixed
 - A post type with no published entries was still listed in the sitemap index
   (a site with no published pages listed `/sitemap-page-1.xml`), and that URL
