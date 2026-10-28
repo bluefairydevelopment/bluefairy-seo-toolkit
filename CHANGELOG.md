@@ -20,13 +20,6 @@ Versioning follows [Semantic Versioning](https://semver.org/): major = architect
   (a site with no published pages listed `/sitemap-page-1.xml`), and that URL
   returned a 404, which Search Console reports as an error. The index now
   leaves out a post type until it has at least one published entry.
-
----
-
-## [1.1.3] — 2026-10-28
-
-### Fixed
-- Deleting the plugin left its sitemap cache list (`bfst_sitemap_cache_keys`) in the database. It is now removed with the other options.
 - On a site with a persistent object cache (Redis, Memcached), deleting the
   plugin left the cached sitemap pages in the cache, where the database
   clean-up could not reach them. Each cached page is now deleted from the list
@@ -35,6 +28,13 @@ Versioning follows [Semantic Versioning](https://semver.org/): major = architect
 - Deleting the plugin also removed the SEO Toolkit Pro add-on's cached
   category and tag sitemap pages. Those belong to Pro and are left for its own
   uninstall.
+
+---
+
+## [1.1.3] — 2026-10-28
+
+### Fixed
+- Deleting the plugin left its sitemap cache list (`bfst_sitemap_cache_keys`) in the database. It is now removed with the other options.
 
 ### Changed
 - Maintenance: the code now meets the WordPress coding standards in full and every class method is covered by automated tests.
