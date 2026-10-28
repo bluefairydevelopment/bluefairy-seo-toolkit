@@ -1,6 +1,6 @@
 # BlueFairy SEO Toolkit — Feature Guide
 
-Version 1.1.1 | GPL-2.0-or-later | PHP 8.1+ | WordPress 6.6+
+Version 1.1.2 | GPL-2.0-or-later | PHP 8.1+ | WordPress 6.6+
 
 BlueFairy SEO Toolkit does two things and does them properly: it writes Open
 Graph tags into your `<head>`, and it serves a paginated XML sitemap. There is
