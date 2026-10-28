@@ -44,6 +44,10 @@ class PostTypeSitemap {
 		add_action( 'before_delete_post', [ self::class, 'invalidate_on_save' ] );
 		add_action( 'update_option_show_on_front', [ self::class, 'invalidate_home_entry' ] );
 		add_action( 'update_option_page_on_front', [ self::class, 'invalidate_home_entry' ] );
+		// update_option() on a missing row goes through add_option(), which
+		// fires add_option_{name} instead (WPMAP-237).
+		add_action( 'add_option_show_on_front', [ self::class, 'invalidate_home_entry' ] );
+		add_action( 'add_option_page_on_front', [ self::class, 'invalidate_home_entry' ] );
 	}
 
 	/**

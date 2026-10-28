@@ -251,6 +251,10 @@ final class SitemapTest extends TestCase {
 		PostTypeSitemap::register_invalidation_hooks();
 		$this->assertSame( [ [ PostTypeSitemap::class, 'invalidate_home_entry' ] ], self::hooked( 'update_option_show_on_front' ) );
 		$this->assertSame( [ [ PostTypeSitemap::class, 'invalidate_home_entry' ] ], self::hooked( 'update_option_page_on_front' ) );
+		// WPMAP-237: update_option() on a missing row calls add_option(),
+		// which fires add_option_{name}, not update_option_{name}.
+		$this->assertSame( [ [ PostTypeSitemap::class, 'invalidate_home_entry' ] ], self::hooked( 'add_option_show_on_front' ) );
+		$this->assertSame( [ [ PostTypeSitemap::class, 'invalidate_home_entry' ] ], self::hooked( 'add_option_page_on_front' ) );
 		set_transient( 'bfst_sitemap_' . md5( 'post_1' ), 'x' );
 		set_transient( 'bfst_sitemap_' . md5( 'post_2' ), 'x' );
 		set_transient( 'bfst_sitemap_index', 'x' );
