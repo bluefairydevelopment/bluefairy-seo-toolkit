@@ -11,6 +11,11 @@ Versioning follows [Semantic Versioning](https://semver.org/): major = architect
 
 ### Fixed
 - The plugin package no longer includes developer and internal files that were never meant to ship.
+- `og:url` on post type archives (such as the WooCommerce shop) and date archives pointed at the home page; it is now the archive's own address.
+- A password-protected post's excerpt or text could appear in `og:description` on the locked page. The site tagline is used instead.
+
+### Added
+- `bfst_canonical_url` filter, so an add-on can set the page URL used for `og:url`.
 
 ## [1.1.1] — 2026-08-31
 

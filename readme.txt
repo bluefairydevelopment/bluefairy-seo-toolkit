@@ -20,7 +20,7 @@ BlueFairy SEO Toolkit gives your WordPress site the two things it cannot do with
 **Open Graph tags output:**
 
 * `og:title` — post title, or site name on the homepage
-* `og:description` — post excerpt (fallback: first 155 characters of content, then the site tagline)
+* `og:description` — post excerpt (fallback: first 55 words of content, then the site tagline)
 * `og:url` — the page URL, with tracking parameters stripped
 * `og:type` — `article` for posts, `product` for WooCommerce products, `website` for everything else
 * `og:site_name` — your site name
@@ -116,6 +116,9 @@ Deleting the plugin through the Plugins screen removes every option it created a
 
 = 1.1.2 =
 * Fixed: The plugin package no longer includes developer and internal files that were never meant to ship.
+* Fixed: `og:url` on post type archives (such as the WooCommerce shop) and date archives pointed at the home page.
+* Fixed: A password-protected post's excerpt or text could appear in `og:description` on the locked page.
+* Added: `bfst_canonical_url` filter, so an add-on can set the page URL used for `og:url`.
 
 = 1.1.1 =
 * Added: `bfst_sitemap_exclusion_meta_query` filter, so an add-on can exclude posts from every sitemap. The sitemap previously exposed no filter at all.

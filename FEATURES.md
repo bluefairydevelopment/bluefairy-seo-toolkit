@@ -15,8 +15,8 @@ Five tags are written on every page where they make sense.
 | Tag | Value |
 |---|---|
 | `og:title` | The post title. The site name on the front page. |
-| `og:description` | The post excerpt, falling back to the first 155 characters of the content with tags and shortcodes stripped. The site tagline on the front page. |
-| `og:url` | The canonical URL of the page, with tracking parameters removed (see below). |
+| `og:description` | The post excerpt, falling back to the first 55 words of the content with tags and shortcodes stripped. The site tagline on the front page, and on a password-protected post, so its text never appears in the page head. |
+| `og:url` | The canonical URL of the page, with tracking parameters removed (see below). On archives this is the archive itself: a post type archive such as the WooCommerce shop, a category, tag, author or date archive. |
 | `og:type` | `article` on singular post entries, `website` everywhere else. |
 | `og:site_name` | Your site name. |
 
@@ -89,6 +89,22 @@ correctly on sites running Redis or Memcached as an external object cache.
 checkbox. Tick one and it disappears from the sitemap index and stops being
 served. Useful for a post type that exists for internal structure and has no
 business in search results.
+
+### Setting the page URL from an add-on (`bfst_canonical_url`)
+
+Added in 1.1.2. The URL written into `og:url` passes through a filter, so a
+plugin with its own archive or profile pages can supply the right address:
+
+```php
+add_filter( 'bfst_canonical_url', function ( $url, $context ) {
+    if ( is_my_profile_page() ) {
+        return my_profile_url();
+    }
+    return $url;
+}, 10, 2 );
+```
+
+Return an empty string to leave `og:url` out on that page.
 
 ### Excluding posts from an add-on (`bfst_sitemap_exclusion_meta_query`)
 
