@@ -90,8 +90,16 @@ class SitemapIndex {
 
 			// Count at SQL level (meta_query NOT EXISTS) so excluded posts don't
 			// inflate page counts and produce empty trailing sitemap pages.
-			$count      = $this->count_posts( $post_type );
-			$page_count = max( 1, (int) ceil( $count / self::POSTS_PER_PAGE ) );
+			$count = $this->count_posts( $post_type );
+
+			// No published posts: advertise nothing. The router answers
+			// /sitemap-{type}-1.xml with a 404 when the type is empty, and an
+			// index entry that 404s is an error in Search Console (WPMAP-235).
+			if ( $count < 1 ) {
+				continue;
+			}
+
+			$page_count = (int) ceil( $count / self::POSTS_PER_PAGE );
 
 			for ( $page = 1; $page <= $page_count; $page++ ) {
 				$entries[] = [
@@ -115,40 +123,16 @@ class SitemapIndex {
 	}
 
 	/**
-	 * Count published posts for a post type (excluding excluded and hidden WC products).
+	 * Count the URLs a post type's sitemap holds.
+	 *
+	 * Delegates to PostTypeSitemap::count_entries(), the query the router
+	 * itself uses, so the index and the router can never disagree (WPMAP-235).
 	 *
 	 * @param string $post_type Post type slug.
 	 * @return int
 	 */
 	protected function count_posts( string $post_type ): int {
-		$args = [
-			'post_type'              => $post_type,
-			'post_status'            => SitemapManager::post_status_for( $post_type ),
-			'posts_per_page'         => 1,
-			'no_found_rows'          => false,
-			'update_post_term_cache' => false,
-			'update_post_meta_cache' => false,
-			'meta_query'             => SitemapManager::exclusion_meta_query( $post_type ), // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- sitemap exclusion needs a meta query; bounded, cached output.
-		];
-
-		// WooCommerce visibility: exclude hidden products.
-		if ( 'product' === $post_type && function_exists( 'wc_get_product' ) ) {
-			$args['meta_query'][] = [
-				'relation' => 'OR',
-				[
-					'key'     => '_visibility',
-					'value'   => 'hidden',
-					'compare' => '!=',
-				],
-				[
-					'key'     => '_visibility',
-					'compare' => 'NOT EXISTS',
-				],
-			];
-		}
-
-		$query = new \WP_Query( $args );
-		return (int) $query->found_posts;
+		return PostTypeSitemap::count_entries( $post_type );
 	}
 
 	/**

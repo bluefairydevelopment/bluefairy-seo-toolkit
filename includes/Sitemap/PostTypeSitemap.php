@@ -150,15 +150,6 @@ class PostTypeSitemap {
 	}
 
 	/**
-	 * How many pages this post type's sitemap actually has.
-	 *
-	 * Always at least 1, so an empty post type still resolves to a valid
-	 * (empty) first page rather than 404ing the URL the index advertises.
-	 *
-	 * @param string $post_type
-	 * @return int
-	 */
-	/**
 	 * How often a crawler should expect this URL to change, from its age.
 	 *
 	 * The 1.0.0 flat sitemap emitted this and the 1.1.0 rewrite dropped it,
@@ -223,10 +214,30 @@ class PostTypeSitemap {
 	/**
 	 * Number of sitemap pages the post type needs (same query as build_xml()).
 	 *
+	 * At least 1, so page 1 of an empty type renders (and is refused as empty
+	 * by render()); the index leaves such a type out, so nothing links to it.
+	 *
 	 * @param string $post_type Post type slug.
 	 * @return int
 	 */
 	protected function page_count( string $post_type ): int {
+		return max( 1, (int) ceil( self::count_entries( $post_type ) / self::POSTS_PER_PAGE ) );
+	}
+
+	/**
+	 * How many URLs the post type's sitemap holds.
+	 *
+	 * The one count both the router and SitemapIndex use (WPMAP-235). The
+	 * index once ran its own query without has_password and with stale
+	 * WooCommerce meta, so a type holding only password-protected posts or
+	 * hidden products was advertised and then answered with a 404.
+	 *
+	 * @since 1.1.4
+	 *
+	 * @param string $post_type Post type slug.
+	 * @return int
+	 */
+	public static function count_entries( string $post_type ): int {
 		$query = new \WP_Query(
 			[
 				'post_type'              => $post_type,
@@ -245,7 +256,7 @@ class PostTypeSitemap {
 			]
 		);
 
-		return max( 1, (int) ceil( (int) $query->found_posts / self::POSTS_PER_PAGE ) );
+		return (int) $query->found_posts;
 	}
 
 	/**

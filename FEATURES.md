@@ -54,7 +54,8 @@ features.
 
 Served at `/sitemap_index.xml`. It lists one entry per post type in scope,
 plus one entry per additional page where a post type has more than 1,000
-published entries.
+published entries. A post type with no published entries is left out (from
+1.1.4), so the index never lists a sitemap that would return a 404.
 
 ### Post-type sitemaps
 

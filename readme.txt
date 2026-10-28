@@ -5,7 +5,7 @@ Tags: seo, open graph, sitemap, xml sitemap, social media
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 1.1.3
+Stable tag: 1.1.4
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -114,6 +114,9 @@ Deleting the plugin through the Plugins screen removes every option it created a
 
 == Changelog ==
 
+= 1.1.4 =
+* Fixed: a post type with no published entries (for example a site with no published pages) was still listed in the sitemap index, and that listed sitemap returned a 404. It is now left out until it has something in it.
+
 = 1.1.3 =
 * Fixed: deleting the plugin left its sitemap cache list in the database; it is now removed.
 * Fixed: on a site with a persistent object cache (Redis, Memcached), deleting the plugin left the cached sitemap pages in the cache; they are now removed.
@@ -153,6 +156,9 @@ Deleting the plugin through the Plugins screen removes every option it created a
 * 12-hour transient cache for the sitemap; invalidated on post save/delete/trash.
 
 == Upgrade Notice ==
+
+= 1.1.4 =
+Bug fix: the sitemap index no longer lists an empty post type's sitemap. No action required.
 
 = 1.1.3 =
 Maintenance release; deleting the plugin now also removes its sitemap cache list. No action required.

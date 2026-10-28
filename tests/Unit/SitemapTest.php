@@ -235,6 +235,30 @@ final class SitemapTest extends TestCase {
 		$this->assertCount( 2, ( new IndexProbe() )->list_entries() );
 	}
 
+	/**
+	 * WPMAP-235: a post type with no published posts must not be advertised.
+	 * The router answers /sitemap-page-1.xml with a 404 when there are no
+	 * pages (render() returns ''), so the index has to skip it to agree.
+	 */
+	public function test_index_skips_a_post_type_with_no_published_posts(): void {
+		$GLOBALS['bfst_wp']['wp_query']['found_posts_by_type'] = [ 'post' => 3, 'page' => 0 ];
+		$GLOBALS['bfst_wp']['get_posts']                       = [ new \WP_Post( (object) [ 'post_modified_gmt' => '2026-02-03 04:05:06' ] ) ];
+		$this->assertSame(
+			[ [ 'loc' => 'https://example.test/sitemap-post-1.xml', 'lastmod' => '2026-02-03' ] ],
+			( new IndexProbe() )->list_entries()
+		);
+
+		// The router agrees: the page sitemap it would have advertised is a 404.
+		$GLOBALS['bfst_wp']['wp_query']['posts'] = [];
+		$this->assertSame( '', ( new PostTypeSitemap() )->render( 'page', 1 ) );
+
+		$GLOBALS['bfst_wp']['wp_query']['found_posts_by_type'] = [ 'post' => 0, 'page' => 0 ];
+		$this->assertSame(
+			"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<sitemapindex xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n</sitemapindex>",
+			( new IndexProbe() )->xml()
+		);
+	}
+
 	public function test_index_render_caches_for_an_hour_and_invalidate_clears_it(): void {
 		$xml = ( new SitemapIndex() )->render();
 		$this->assertSame( $xml, get_transient( 'bfst_sitemap_index' ) );
@@ -258,18 +282,31 @@ final class SitemapTest extends TestCase {
 		$this->assertSame( "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<sitemapindex xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n  <sitemap>\n    <loc>https://example.test/a</loc>\n  </sitemap>\n</sitemapindex>", $i->to_xml( [ [ 'loc' => 'https://example.test/a', 'lastmod' => '' ] ] ) );
 	}
 
-	public function test_index_counts_exclude_hidden_products_when_woocommerce_runs(): void {
-		[ $out, $status ] = self::run_isolated(
-			<<<'PHP'
-			function wc_get_product() {}
-			$GLOBALS['bfst_wp']['wp_query']['found_posts'] = 3;
-			$r = new ReflectionMethod( BlueFairy\SeoToolkit\Sitemap\SitemapIndex::class, 'count_posts' );
-			$n = $r->invoke( new BlueFairy\SeoToolkit\Sitemap\SitemapIndex(), 'product' );
-			echo $n, ' ', json_encode( end( $GLOBALS['bfst_wp']['queries'] )['meta_query'][1] );
-			PHP
-		);
-		$this->assertSame( 0, $status, $out );
-		$this->assertSame( '3 {"relation":"OR","0":{"key":"_visibility","value":"hidden","compare":"!="},"1":{"key":"_visibility","compare":"NOT EXISTS"}}', $out );
+	/**
+	 * The index's count and the router's page count must run the SAME query.
+	 * When they differed (no has_password, stale _visibility meta instead of
+	 * the product_visibility taxonomy), a type whose only entries were
+	 * password-protected or hidden products was listed and then 404'd.
+	 */
+	public function test_index_counts_with_the_query_the_router_uses(): void {
+		$GLOBALS['bfst_wp']['taxonomy_exists']['product_visibility'] = true;
+		foreach ( [ 'post', 'product' ] as $type ) {
+			( new IndexProbe() )->count( $type );
+			$index_q = end( $GLOBALS['bfst_wp']['queries'] );
+			( new PtsProbe() )->pages( $type );
+			$router_q = end( $GLOBALS['bfst_wp']['queries'] );
+			$this->assertSame( $router_q, $index_q, $type );
+			$this->assertFalse( $index_q['has_password'], $type );
+		}
+		$this->assertSame( 'product_visibility', $index_q['tax_query'][0]['taxonomy'] );
+	}
+
+	public function test_count_entries_returns_found_posts_and_page_count_floors_at_one(): void {
+		$GLOBALS['bfst_wp']['wp_query']['found_posts'] = 0;
+		$this->assertSame( 0, PostTypeSitemap::count_entries( 'post' ) );
+		$this->assertSame( 0, ( new IndexProbe() )->count( 'post' ) );
+		$GLOBALS['bfst_wp']['wp_query']['found_posts'] = 7;
+		$this->assertSame( 7, PostTypeSitemap::count_entries( 'post' ) );
 	}
 
 	public function test_set_handler_swaps_the_class_used_for_a_sitemap_kind(): void {
@@ -300,7 +337,7 @@ final class SitemapTest extends TestCase {
 	public function test_route_serves_the_index_a_post_page_and_filtered_kinds_then_exits(): void {
 		$run = static fn( string $setup ) => self::run_isolated( $setup . "\nBlueFairy\\SeoToolkit\\Sitemap\\SitemapManager::route_sitemap();\necho 'NOT EXITED';" );
 
-		[ $out, $status ] = $run( "\$GLOBALS['bfst_wp']['query_vars']['bfst_sitemap'] = 'index';" );
+		[ $out, $status ] = $run( "\$GLOBALS['bfst_wp']['wp_query']['found_posts'] = 1; \$GLOBALS['bfst_wp']['query_vars']['bfst_sitemap'] = 'index';" );
 		$this->assertSame( 0, $status, $out );
 		$this->assertSame( "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<sitemapindex xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n  <sitemap>\n    <loc>https://example.test/sitemap-post-1.xml</loc>\n    <lastmod>" . gmdate( 'Y-m-d' ) . "</lastmod>\n  </sitemap>\n  <sitemap>\n    <loc>https://example.test/sitemap-page-1.xml</loc>\n    <lastmod>" . gmdate( 'Y-m-d' ) . "</lastmod>\n  </sitemap>\n</sitemapindex>", $out );
 
