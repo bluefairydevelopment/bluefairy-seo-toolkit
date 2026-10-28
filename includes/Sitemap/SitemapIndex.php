@@ -80,6 +80,15 @@ class SitemapIndex {
 		$entries    = [];
 		$exclusions = $this->exclusions();
 
+		// The home page, when it shows the latest posts: its own sitemap, so
+		// it is listed even with no posts or with posts excluded (WPMAP-237).
+		if ( HomeSitemap::applies() ) {
+			$entries[] = [
+				'loc'     => HomeSitemap::url(),
+				'lastmod' => HomeSitemap::lastmod(),
+			];
+		}
+
 		// Post type sitemaps. SitemapManager::post_types() is the single source
 		// of scope, so the index can never advertise a sitemap that the router
 		// would answer with a 404.
@@ -139,7 +148,7 @@ class SitemapIndex {
 	 * Get the lastmod date for a post type (most recently modified published post).
 	 *
 	 * @param string $post_type Post type slug.
-	 * @return string ISO 8601 date string.
+	 * @return string Y-m-d, or '' when the stored date is unset.
 	 */
 	protected function get_post_type_lastmod( string $post_type ): string {
 		$posts = get_posts(
@@ -158,7 +167,7 @@ class SitemapIndex {
 			return gmdate( 'Y-m-d' );
 		}
 
-		return gmdate( 'Y-m-d', (int) strtotime( $posts[0]->post_modified_gmt ) );
+		return SitemapManager::lastmod( $posts[0]->post_modified_gmt );
 	}
 
 	/**
