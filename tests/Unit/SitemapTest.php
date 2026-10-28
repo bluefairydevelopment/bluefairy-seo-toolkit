@@ -242,6 +242,17 @@ final class SitemapTest extends TestCase {
 		$this->assertSame( [ 'bfst_sitemap_' . md5( 'page_11' ), 'bfst_sitemap_' . md5( 'post_1' ) ], array_keys( $GLOBALS['bfst_wp']['transients'] ) );
 	}
 
+	public function test_changing_the_front_page_setting_drops_the_cached_home_entry(): void {
+		PostTypeSitemap::register_invalidation_hooks();
+		$this->assertSame( [ [ PostTypeSitemap::class, 'invalidate_home_entry' ] ], self::hooked( 'update_option_show_on_front' ) );
+		$this->assertSame( [ [ PostTypeSitemap::class, 'invalidate_home_entry' ] ], self::hooked( 'update_option_page_on_front' ) );
+		set_transient( 'bfst_sitemap_' . md5( 'post_1' ), 'x' );
+		set_transient( 'bfst_sitemap_' . md5( 'post_2' ), 'x' );
+		set_transient( 'bfst_sitemap_index', 'x' );
+		PostTypeSitemap::invalidate_home_entry();
+		$this->assertSame( [ 'bfst_sitemap_' . md5( 'post_2' ) ], array_keys( $GLOBALS['bfst_wp']['transients'] ) );
+	}
+
 	public function test_register_invalidation_hooks(): void {
 		PostTypeSitemap::register_invalidation_hooks();
 		$this->assertSame( [ [ PostTypeSitemap::class, 'invalidate_on_save' ] ], self::hooked( 'save_post' ) );

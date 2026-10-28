@@ -42,6 +42,21 @@ class PostTypeSitemap {
 		add_action( 'save_post', [ self::class, 'invalidate_on_save' ] );
 		add_action( 'wp_trash_post', [ self::class, 'invalidate_on_save' ] );
 		add_action( 'before_delete_post', [ self::class, 'invalidate_on_save' ] );
+		add_action( 'update_option_show_on_front', [ self::class, 'invalidate_home_entry' ] );
+		add_action( 'update_option_page_on_front', [ self::class, 'invalidate_home_entry' ] );
+	}
+
+	/**
+	 * Drop the cached page that carries the home entry, and the index.
+	 *
+	 * Whether the home page is listed depends on Settings > Reading, which no
+	 * post save reports; without this a change there showed up a day late.
+	 *
+	 * @since 1.1.4
+	 */
+	public static function invalidate_home_entry(): void {
+		delete_transient( 'bfst_sitemap_' . md5( 'post_1' ) );
+		SitemapIndex::invalidate();
 	}
 
 	/**
