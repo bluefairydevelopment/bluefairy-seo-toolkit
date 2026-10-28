@@ -7,6 +7,14 @@ Versioning follows [Semantic Versioning](https://semver.org/): major = architect
 
 ---
 
+## [1.1.3] — 2026-10-28
+
+### Fixed
+- Deleting the plugin left its sitemap cache list (`bfst_sitemap_cache_keys`) in the database. It is now removed with the other options.
+
+### Changed
+- Maintenance: the code now meets the WordPress coding standards in full and every class method is covered by automated tests.
+
 ## [1.1.2] — 2026-10-27
 
 ### Fixed

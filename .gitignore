@@ -9,3 +9,4 @@ node_modules/
 *.zip
 docs/screenshots/
 .cache/
+.phpunit.cache/
