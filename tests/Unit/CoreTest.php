@@ -102,7 +102,31 @@ final class CoreTest extends TestCase {
 			PHP
 		);
 		$this->assertSame( 0, $status, $out );
-		$this->assertSame( '[["unrelated"],["DELETE FROM wp_options WHERE option_name LIKE \'\\\\_transient\\\\_bfst\\\\_%\' OR option_name LIKE \'\\\\_transient\\\\_timeout\\\\_bfst\\\\_%\'"]]', $out );
+		$this->assertSame( '[["unrelated"],["DELETE FROM wp_options WHERE option_name LIKE \'\\\\_transient\\\\_bfst\\\\_sitemap\\\\_%\' OR option_name LIKE \'\\\\_transient\\\\_timeout\\\\_bfst\\\\_sitemap\\\\_%\'"]]', $out, 'only this plugin\'s sitemap prefix: Pro\'s bfst_tax_ transients are Pro\'s to delete' );
+	}
+
+	/**
+	 * On a site with a persistent object cache (Redis, Memcached) transients
+	 * never reach wp_options, so the LIKE sweep finds nothing. Uninstall must
+	 * delete the recorded keys and the index through delete_transient(), and
+	 * leave the Pro add-on's bfst_tax_ pages alone.
+	 */
+	public function test_uninstall_deletes_the_sitemap_transients_from_a_persistent_object_cache(): void {
+		[ $out, $status ] = self::run_isolated(
+			<<<'PHP'
+			define( 'WP_UNINSTALL_PLUGIN', true );
+			$GLOBALS['bfst_wp']['ext_cache'] = true;
+			$a = 'bfst_sitemap_' . md5( 'post_1' );
+			$b = 'bfst_sitemap_' . md5( 'page_1' );
+			$t = 'bfst_tax_' . md5( 'category_1' );
+			foreach ( [ $a, $b, 'bfst_sitemap_index', $t, 'other' ] as $k ) { set_transient( $k, 'x', 60 ); }
+			update_option( 'bfst_sitemap_cache_keys', [ $a, $b ] );
+			require BFST_PLUGIN_DIR . 'uninstall.php';
+			echo json_encode( array_keys( $GLOBALS['bfst_wp']['transients'] ) ), '|', json_encode( get_option( 'bfst_sitemap_cache_keys' ) );
+			PHP
+		);
+		$this->assertSame( 0, $status, $out );
+		$this->assertSame( '["bfst_tax_' . md5( 'category_1' ) . '","other"]|false', $out );
 	}
 
 	public function test_uninstall_walks_every_site_in_batches_of_200(): void {

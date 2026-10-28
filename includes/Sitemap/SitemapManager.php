@@ -83,6 +83,14 @@ class SitemapManager {
 	private const CACHE_INDEX_OPTION = 'bfst_sitemap_cache_keys';
 
 	/**
+	 * Most keys the registry holds. The oldest is dropped past this, and its
+	 * transient deleted with it, so no cached page is ever left untracked.
+	 *
+	 * @since 1.1.3
+	 */
+	public const CACHE_INDEX_MAX = 500;
+
+	/**
 	 * Record a sitemap transient key so it can be deleted later.
 	 *
 	 * @param string $key Transient key, without the _transient_ prefix.
@@ -92,10 +100,17 @@ class SitemapManager {
 		if ( ! is_array( $keys ) ) {
 			$keys = [];
 		}
-		if ( ! in_array( $key, $keys, true ) ) {
-			$keys[] = $key;
-			update_option( self::CACHE_INDEX_OPTION, $keys, false );
+		if ( in_array( $key, $keys, true ) ) {
+			return;
 		}
+		$keys[] = $key;
+		$over   = count( $keys ) - self::CACHE_INDEX_MAX;
+		if ( $over > 0 ) {
+			foreach ( array_splice( $keys, 0, $over ) as $evicted ) {
+				delete_transient( (string) $evicted );
+			}
+		}
+		update_option( self::CACHE_INDEX_OPTION, array_values( $keys ), false );
 	}
 
 	/**

@@ -11,6 +11,14 @@ Versioning follows [Semantic Versioning](https://semver.org/): major = architect
 
 ### Fixed
 - Deleting the plugin left its sitemap cache list (`bfst_sitemap_cache_keys`) in the database. It is now removed with the other options.
+- On a site with a persistent object cache (Redis, Memcached), deleting the
+  plugin left the cached sitemap pages in the cache, where the database
+  clean-up could not reach them. Each cached page is now deleted from the list
+  the plugin keeps; that list is capped, and a page dropped from it is deleted
+  at the same time.
+- Deleting the plugin also removed the SEO Toolkit Pro add-on's cached
+  category and tag sitemap pages. Those belong to Pro and are left for its own
+  uninstall.
 
 ### Changed
 - Maintenance: the code now meets the WordPress coding standards in full and every class method is covered by automated tests.
