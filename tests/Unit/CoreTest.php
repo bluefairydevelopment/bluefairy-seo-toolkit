@@ -96,13 +96,13 @@ final class CoreTest extends TestCase {
 		[ $out, $status ] = self::run_isolated(
 			<<<'PHP'
 			define( 'WP_UNINSTALL_PLUGIN', true );
-			foreach ( [ 'bfst_features', 'bfst_sitemap_exclusions', 'bfst_schema_version', 'bfst_activated_at', 'unrelated' ] as $k ) { update_option( $k, 1 ); }
+			foreach ( [ 'bfst_features', 'bfst_sitemap_exclusions', 'bfst_schema_version', 'bfst_activated_at', 'bfst_sitemap_cache_keys', 'unrelated' ] as $k ) { update_option( $k, 1 ); }
 			require BFST_PLUGIN_DIR . 'uninstall.php';
 			echo json_encode( [ array_keys( $GLOBALS['bfst_wp']['options'] ), $GLOBALS['bfst_wp']['db_sql'] ] );
 			PHP
 		);
 		$this->assertSame( 0, $status, $out );
-		$this->assertSame( '[["unrelated"],["DELETE FROM wp_options WHERE option_name LIKE \'_transient_bfst_%\' OR option_name LIKE \'_transient_timeout_bfst_%\'"]]', $out );
+		$this->assertSame( '[["unrelated"],["DELETE FROM wp_options WHERE option_name LIKE \'\\\\_transient\\\\_bfst\\\\_%\' OR option_name LIKE \'\\\\_transient\\\\_timeout\\\\_bfst\\\\_%\'"]]', $out );
 	}
 
 	public function test_uninstall_walks_every_site_in_batches_of_200(): void {

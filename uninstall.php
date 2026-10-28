@@ -23,6 +23,7 @@ $bfst_option_keys = [
 	'bfst_sitemap_exclusions',
 	'bfst_schema_version',
 	'bfst_activated_at',
+	'bfst_sitemap_cache_keys',
 ];
 
 // The base plugin writes no post meta — the per-post SEO meta box belongs to
@@ -69,8 +70,8 @@ foreach ( $bfst_site_ids as $bfst_site ) {
 	$wpdb->query(
 		$wpdb->prepare(
 			"DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s",
-			'_transient_bfst_%',
-			'_transient_timeout_bfst_%'
+			$wpdb->esc_like( '_transient_bfst_' ) . '%',
+			$wpdb->esc_like( '_transient_timeout_bfst_' ) . '%'
 		)
 	);
 

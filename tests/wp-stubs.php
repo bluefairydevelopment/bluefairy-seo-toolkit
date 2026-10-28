@@ -97,6 +97,9 @@ final class BFST_Fake_Wpdb {
 		}
 		return $sql;
 	}
+	public function esc_like( string $text ): string {
+		return addcslashes( $text, '_%\\' );
+	}
 	public function query( string $sql ): int {
 		$GLOBALS['bfst_wp']['db_sql'][] = $sql;
 		return 0;

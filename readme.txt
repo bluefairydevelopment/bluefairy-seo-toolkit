@@ -115,7 +115,8 @@ Deleting the plugin through the Plugins screen removes every option it created a
 == Changelog ==
 
 = 1.1.3 =
-* Maintenance: the code now meets the WordPress coding standards in full and every class method is covered by automated tests. No change in behaviour.
+* Fixed: deleting the plugin left its sitemap cache list in the database; it is now removed.
+* Maintenance: the code now meets the WordPress coding standards in full and every class method is covered by automated tests.
 
 = 1.1.2 =
 * Fixed: The plugin package no longer includes developer and internal files that were never meant to ship.
@@ -152,7 +153,7 @@ Deleting the plugin through the Plugins screen removes every option it created a
 == Upgrade Notice ==
 
 = 1.1.3 =
-Maintenance release with no change in behaviour. No action required.
+Maintenance release; deleting the plugin now also removes its sitemap cache list. No action required.
 
 = 1.1.2 =
 Removes files that did not belong in the plugin package. No action required.
