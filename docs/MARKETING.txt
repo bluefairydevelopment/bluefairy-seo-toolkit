@@ -122,7 +122,7 @@ single-product-bluefairy-seo-toolkit.html)
   <ul>
     <li>Open Graph: og:title, og:description, og:url, og:type, og:site_name</li>
     <li>Output suppressed on 404, search and feed pages</li>
-    <li>Description fallback: excerpt &rarr; first 155 characters of content &rarr; site tagline</li>
+    <li>Description fallback: excerpt &rarr; first 55 words of content &rarr; site tagline</li>
     <li>Sitemap index at /sitemap_index.xml with per-post-type child sitemaps</li>
     <li>Posts and pages, paginated at 1,000 URLs per file</li>
     <li>lastmod from post_modified_gmt; changefreq derived from post age</li>

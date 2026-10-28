@@ -160,6 +160,11 @@ class OpenGraphRenderer implements RendererInterface {
      */
     protected function get_description( PageContext $ctx ): string {
         if ( $ctx->post instanceof \WP_Post ) {
+            // A password-protected post's text is for visitors who know the
+            // password; never put it in the head of the locked page.
+            if ( post_password_required( $ctx->post ) ) {
+                return wp_strip_all_tags( get_bloginfo( 'description' ) );
+            }
             if ( $ctx->post->post_excerpt !== '' ) {
                 return wp_strip_all_tags( $ctx->post->post_excerpt );
             }

@@ -236,6 +236,24 @@ final class PageContext {
         } elseif ( is_home() ) {
             $page_id = (int) get_option( 'page_for_posts' );
             $url = $page_id > 0 ? (string) get_permalink( $page_id ) : home_url( '/' );
+        } elseif ( is_post_type_archive() ) {
+            $post_type = get_query_var( 'post_type' );
+            if ( is_array( $post_type ) ) {
+                $post_type = reset( $post_type );
+            }
+            $archive = is_string( $post_type ) && $post_type !== '' ? get_post_type_archive_link( $post_type ) : false;
+            $url = is_string( $archive ) && $archive !== '' ? $archive : home_url( '/' );
+        } elseif ( is_date() ) {
+            $year  = (int) get_query_var( 'year' );
+            $month = (int) get_query_var( 'monthnum' );
+            $day   = (int) get_query_var( 'day' );
+            if ( is_day() ) {
+                $url = (string) get_day_link( $year, $month, $day );
+            } elseif ( is_month() ) {
+                $url = (string) get_month_link( $year, $month );
+            } else {
+                $url = (string) get_year_link( $year );
+            }
         } else {
             $url = home_url( '/' );
         }
@@ -257,7 +275,17 @@ final class PageContext {
             $url = remove_query_arg( 'paged', $url );
         }
 
-        return esc_url_raw( $url );
+        /**
+         * Filters the canonical URL the toolkit uses for og:url (and, with
+         * Pro, rel=canonical). A plugin with its own archive pages can feed
+         * the right URL here. Return '' to suppress it.
+         *
+         * @param string      $url The computed canonical URL.
+         * @param PageContext $ctx This page context.
+         */
+        $filtered = apply_filters( 'bfst_canonical_url', $url, $this );
+
+        return is_string( $filtered ) ? esc_url_raw( $filtered ) : esc_url_raw( $url );
     }
 
     /**
