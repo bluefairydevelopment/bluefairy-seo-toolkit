@@ -3,7 +3,7 @@
  * Plugin Name: BlueFairy SEO Toolkit
  * Plugin URI:  https://wordpress.bluefairydevelopment.com/product/bluefairy-seo-toolkit/
  * Description: Open Graph tags and XML sitemaps for WordPress — no bloat, no configuration. Pauses automatically when Yoast SEO, Rank Math, SEOPress or The SEO Framework is active, so you never get duplicate output. Add BlueFairy SEO Toolkit Pro for JSON-LD schema, canonical management and the per-post SEO meta box.
- * Version:     1.1.1
+ * Version:     1.1.2
  * Requires at least: 6.6
  * Requires PHP: 8.1
  * Author:      Blue Fairy Development
@@ -22,7 +22,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 define( 'BFST_PLUGIN_FILE', __FILE__ );
 define( 'BFST_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'BFST_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
-define( 'BFST_VERSION', '1.1.1' );
+define( 'BFST_VERSION', '1.1.2' );
 
 // Autoloader — no Composer required.
 spl_autoload_register( static function ( string $class ): void {

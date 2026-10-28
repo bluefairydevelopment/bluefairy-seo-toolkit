@@ -5,7 +5,7 @@ Tags: seo, open graph, sitemap, xml sitemap, social media
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 1.1.1
+Stable tag: 1.1.2
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -114,6 +114,9 @@ Deleting the plugin through the Plugins screen removes every option it created a
 
 == Changelog ==
 
+= 1.1.2 =
+* Fixed: The plugin package no longer includes developer and internal files that were never meant to ship.
+
 = 1.1.1 =
 * Added: `bfst_sitemap_exclusion_meta_query` filter, so an add-on can exclude posts from every sitemap. The sitemap previously exposed no filter at all.
 * Changed: the sitemap exclusion clause is now built once in `SitemapManager::exclusion_meta_query()` instead of being repeated in three query builders that had to be kept in step by hand.
@@ -141,6 +144,9 @@ Deleting the plugin through the Plugins screen removes every option it created a
 * 12-hour transient cache for the sitemap; invalidated on post save/delete/trash.
 
 == Upgrade Notice ==
+
+= 1.1.2 =
+Removes files that did not belong in the plugin package. No action required.
 
 = 1.1.1 =
 No action required. BlueFairy SEO Toolkit Pro 1.1.1 requires this version — update this plugin first if you use Pro.
