@@ -117,11 +117,11 @@ Deleting the plugin through the Plugins screen removes every option it created a
 = 1.1.4 =
 * Changed: when the front page shows your latest posts, the home page is now listed first in the post sitemap. Sites with a static front page are unchanged.
 * Fixed: a post type with no published entries (for example a site with no published pages) was still listed in the sitemap index, and that listed sitemap returned a 404. It is now left out until it has something in it.
+* Fixed: on a site with a persistent object cache (Redis, Memcached), deleting the plugin left the cached sitemap pages in the cache; they are now removed.
+* Fixed: deleting the plugin also removed the Pro add-on's cached taxonomy sitemap pages; they are now left for Pro's own uninstall.
 
 = 1.1.3 =
 * Fixed: deleting the plugin left its sitemap cache list in the database; it is now removed.
-* Fixed: on a site with a persistent object cache (Redis, Memcached), deleting the plugin left the cached sitemap pages in the cache; they are now removed.
-* Fixed: deleting the plugin also removed the Pro add-on's cached taxonomy sitemap pages; they are now left for Pro's own uninstall.
 * Maintenance: the code now meets the WordPress coding standards in full and every class method is covered by automated tests.
 
 = 1.1.2 =
@@ -159,7 +159,7 @@ Deleting the plugin through the Plugins screen removes every option it created a
 == Upgrade Notice ==
 
 = 1.1.4 =
-The home page is now in the sitemap when the front page shows your latest posts, and the sitemap index no longer lists an empty post type's sitemap. No action required.
+The home page is now in the sitemap when the front page shows your latest posts, the sitemap index no longer lists an empty post type's sitemap, and deleting the plugin on a site with a persistent object cache (Redis, Memcached) now also removes its cached sitemap pages. No action required.
 
 = 1.1.3 =
 Maintenance release; deleting the plugin now also removes its sitemap cache list. No action required.
