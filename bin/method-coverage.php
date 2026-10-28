@@ -126,7 +126,8 @@ function bfcov_methods_in_file( string $path ): array {
 			while ( $j < $count && ( ( is_array( $tokens[ $j ] ) && T_WHITESPACE === $tokens[ $j ][0] ) || '&' === $tokens[ $j ] || ( is_array( $tokens[ $j ] ) && in_array( $tokens[ $j ][0], [ T_AMPERSAND_FOLLOWED_BY_VAR_OR_VARARG, T_AMPERSAND_NOT_FOLLOWED_BY_VAR_OR_VARARG ], true ) ) ) ) {
 				++$j;
 			}
-			if ( $j < $count && is_array( $tokens[ $j ] ) && T_STRING === $tokens[ $j ][0] && [] === $functions ) {
+			// A method may be named with a reserved word (list, print, match, new): any identifier-shaped token counts.
+			if ( $j < $count && is_array( $tokens[ $j ] ) && 1 === preg_match( '/^[A-Za-z_\x80-\xff][A-Za-z0-9_\x80-\xff]*$/', $tokens[ $j ][1] ) && [] === $functions ) {
 				$visibility = 'public';
 				for ( $k = $i - 1; $k >= 0; $k-- ) {
 					$u = $tokens[ $k ];
@@ -351,30 +352,30 @@ function bfcov_self_check( string $tool_root ): int {
 	@mkdir( $scratch . '/includes/Sub', 0777, true );
 	@mkdir( $scratch . '/tests/Unit', 0777, true );
 	file_put_contents( $scratch . '/includes/Alpha.php', "<?php\nnamespace Fx;\nfinal class Alpha {\n\tpublic function render(): string {\n\t\treturn 'a';\n\t}\n}\n" );
-	file_put_contents( $scratch . '/includes/Sub/Beta.php', "<?php\nnamespace Fx;\nabstract class Base { abstract public function shape(): string; }\ninterface Shows { public function show(): void; }\nclass Beta extends Base {\n\tpublic function render(): string {\n\t\treturn \$this->helper();\n\t}\n\tprivate function helper(): string {\n\t\t\$f = function () { return 'b'; };\n\t\treturn \$f();\n\t}\n\tpublic function shape(): string { return Beta::class; }\n}\nfunction loose(): int {\n\treturn 1;\n}\n" );
+	file_put_contents( $scratch . '/includes/Sub/Beta.php', "<?php\nnamespace Fx;\nabstract class Base { abstract public function shape(): string; }\ninterface Shows { public function show(): void; }\nclass Beta extends Base {\n\tpublic function render(): string {\n\t\treturn \$this->helper();\n\t}\n\tprivate function helper(): string {\n\t\t\$f = function () { return 'b'; };\n\t\treturn \$f();\n\t}\n\tpublic function shape(): string { return Beta::class; }\n\tpublic function list(): array { return []; }\n}\nfunction loose(): int {\n\treturn 1;\n}\n" );
 	file_put_contents( $scratch . '/tests/bootstrap.php', "<?php\nrequire __DIR__ . '/../includes/Alpha.php';\nrequire __DIR__ . '/../includes/Sub/Beta.php';\n" );
 	file_put_contents( $scratch . '/tests/Unit/AlphaTest.php', "<?php\nuse PHPUnit\\Framework\\TestCase;\nfinal class AlphaTest extends TestCase {\n\tpublic function test_render(): void {\n\t\t\$this->assertSame( 'a', ( new Fx\\Alpha() )->render() );\n\t\t\$this->assertSame( 'shape', 'shape' );\n\t\t\$this->assertSame( 1, \\Fx\\loose() );\n\t\t\$cb = [ 'x', 'helper' ];\n\t\t\$this->assertCount( 2, \$cb );\n\t}\n}\n" );
 	file_put_contents( $scratch . '/phpunit.xml', "<?xml version=\"1.0\"?>\n<phpunit bootstrap=\"tests/bootstrap.php\" cacheDirectory=\".phpunit.cache\">\n<testsuites><testsuite name=\"u\"><directory suffix=\"Test.php\">tests/Unit</directory></testsuite></testsuites>\n<source><include><directory>includes/</directory></include></source>\n</phpunit>\n" );
 
 	// 1. The scanner: namespaced, class-qualified keys; private + closures + loose functions; no body = not counted.
 	$methods = bfcov_methods( $scratch . '/includes' );
-	$say( [ 'Fx\\Alpha::render', 'Fx\\Beta::helper', 'Fx\\Beta::render', 'Fx\\Beta::shape', 'Fx\\loose()' ] === array_keys( $methods ), 'scanner: ' . implode( ', ', array_keys( $methods ) ) );
+	$say( [ 'Fx\\Alpha::render', 'Fx\\Beta::helper', 'Fx\\Beta::list', 'Fx\\Beta::render', 'Fx\\Beta::shape', 'Fx\\loose()' ] === array_keys( $methods ), 'scanner: ' . implode( ', ', array_keys( $methods ) ) );
 
 	// 2. The planted case: the run must exit 1 and name Beta::render and Beta::helper, and nothing that ran.
 	ob_start();
 	$status = bfcov_report( (string) realpath( $scratch ), $tool_root, null );
 	$report = (string) ob_get_clean();
 	$say( 1 === $status, "planted untested same-named method: exit {$status} (want 1)" );
-	$say( str_contains( $report, '  - Fx\\Beta::render (' ) && str_contains( $report, '  - Fx\\Beta::helper (' ) && str_contains( $report, '  - Fx\\Beta::shape (' ), 'report names Fx\\Beta::render, ::helper and ::shape as not run' );
+	$say( str_contains( $report, '  - Fx\\Beta::render (' ) && str_contains( $report, '  - Fx\\Beta::helper (' ) && str_contains( $report, '  - Fx\\Beta::shape (' ) && str_contains( $report, '  - Fx\\Beta::list (' ), 'report names Fx\\Beta::render, ::helper, ::shape and ::list as not run' );
 	$say( ! str_contains( $report, 'Fx\\Alpha::render (' ) && ! str_contains( $report, 'Fx\\loose() (' ), 'report does not name the methods that ran' );
-	$say( str_contains( $report, 'method coverage: 2/5 ran' ), 'count: 2/5 ran' );
+	$say( str_contains( $report, 'method coverage: 2/6 ran' ), 'count: 2/6 ran' );
 
 	// 3. Cure the plant: a test that runs Beta::render (and through it helper) and shape → exit 0.
-	file_put_contents( $scratch . '/tests/Unit/BetaTest.php', "<?php\nuse PHPUnit\\Framework\\TestCase;\nfinal class BetaTest extends TestCase {\n\tpublic function test_render(): void {\n\t\t\$this->assertSame( 'b', ( new Fx\\Beta() )->render() );\n\t\t\$this->assertSame( 'Fx\\\\Beta', ( new Fx\\Beta() )->shape() );\n\t}\n}\n" );
+	file_put_contents( $scratch . '/tests/Unit/BetaTest.php', "<?php\nuse PHPUnit\\Framework\\TestCase;\nfinal class BetaTest extends TestCase {\n\tpublic function test_render(): void {\n\t\t\$this->assertSame( 'b', ( new Fx\\Beta() )->render() );\n\t\t\$this->assertSame( 'Fx\\\\Beta', ( new Fx\\Beta() )->shape() );\n\t\t\$this->assertSame( [], ( new Fx\\Beta() )->list() );\n\t}\n}\n" );
 	ob_start();
 	$status = bfcov_report( (string) realpath( $scratch ), $tool_root, null );
 	$report = (string) ob_get_clean();
-	$say( 0 === $status && str_contains( $report, 'method coverage: 5/5 methods ran' ), "cured plant passes: exit {$status}, 5/5" );
+	$say( 0 === $status && str_contains( $report, 'method coverage: 6/6 methods ran' ), "cured plant passes: exit {$status}, 6/6" );
 
 	// 4. A failing suite is not counted.
 	file_put_contents( $scratch . '/tests/Unit/RedTest.php', "<?php\nuse PHPUnit\\Framework\\TestCase;\nfinal class RedTest extends TestCase {\n\tpublic function test_red(): void {\n\t\t\$this->assertTrue( false );\n\t}\n}\n" );
