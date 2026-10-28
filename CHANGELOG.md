@@ -7,6 +7,11 @@ Versioning follows [Semantic Versioning](https://semver.org/): major = architect
 
 ---
 
+## [1.1.3] — 2026-10-28
+
+### Changed
+- Maintenance: the code now meets the WordPress coding standards in full and every class method is covered by automated tests. No change in behaviour.
+
 ## [1.1.2] — 2026-10-27
 
 ### Fixed

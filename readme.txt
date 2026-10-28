@@ -5,7 +5,7 @@ Tags: seo, open graph, sitemap, xml sitemap, social media
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 1.1.2
+Stable tag: 1.1.3
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -114,6 +114,9 @@ Deleting the plugin through the Plugins screen removes every option it created a
 
 == Changelog ==
 
+= 1.1.3 =
+* Maintenance: the code now meets the WordPress coding standards in full and every class method is covered by automated tests. No change in behaviour.
+
 = 1.1.2 =
 * Fixed: The plugin package no longer includes developer and internal files that were never meant to ship.
 * Fixed: `og:url` on post type archives (such as the WooCommerce shop) and date archives pointed at the home page.
@@ -147,6 +150,9 @@ Deleting the plugin through the Plugins screen removes every option it created a
 * 12-hour transient cache for the sitemap; invalidated on post save/delete/trash.
 
 == Upgrade Notice ==
+
+= 1.1.3 =
+Maintenance release with no change in behaviour. No action required.
 
 = 1.1.2 =
 Removes files that did not belong in the plugin package. No action required.

@@ -29,303 +29,309 @@ namespace BlueFairy\SeoToolkit\Sitemap;
  */
 class PostTypeSitemap {
 
-    /**
-     * Posts per sitemap page.
-     */
-    protected const POSTS_PER_PAGE = 1000;
+	/**
+	 * Posts per sitemap page.
+	 */
+	protected const POSTS_PER_PAGE = 1000;
 
-    /**
-     * Register cache invalidation hooks.
-     * Called from SitemapManager::register() via plugins_loaded.
-     */
-    public static function register_invalidation_hooks(): void {
-        add_action( 'save_post', [ self::class, 'invalidate_on_save' ] );
-        add_action( 'wp_trash_post', [ self::class, 'invalidate_on_save' ] );
-        add_action( 'before_delete_post', [ self::class, 'invalidate_on_save' ] );
-    }
+	/**
+	 * Register cache invalidation hooks.
+	 * Called from SitemapManager::register() via plugins_loaded.
+	 */
+	public static function register_invalidation_hooks(): void {
+		add_action( 'save_post', [ self::class, 'invalidate_on_save' ] );
+		add_action( 'wp_trash_post', [ self::class, 'invalidate_on_save' ] );
+		add_action( 'before_delete_post', [ self::class, 'invalidate_on_save' ] );
+	}
 
-    /**
-     * Invalidate all post type sitemap transients.
-     * Called on save_post, wp_trash_post, before_delete_post.
-     *
-     * @param int $post_id
-     */
-    public static function invalidate_on_save( int $post_id ): void {
-        $post = get_post( $post_id );
-        if ( ! $post instanceof \WP_Post ) {
-            return;
-        }
+	/**
+	 * Invalidate all post type sitemap transients.
+	 * Called on save_post, wp_trash_post, before_delete_post.
+	 *
+	 * @param int $post_id Post ID.
+	 */
+	public static function invalidate_on_save( int $post_id ): void {
+		$post = get_post( $post_id );
+		if ( ! $post instanceof \WP_Post ) {
+			return;
+		}
 
-        // Invalidate all pages for this post type (brute-force up to 10 pages).
-        // For most sites one pass is enough; large sites regenerate on next hit.
-        for ( $page = 1; $page <= 10; $page++ ) {
-            $key = 'bfst_sitemap_' . md5( $post->post_type . '_' . $page );
-            delete_transient( $key );
-        }
+		// Invalidate all pages for this post type (brute-force up to 10 pages).
+		// For most sites one pass is enough; large sites regenerate on next hit.
+		for ( $page = 1; $page <= 10; $page++ ) {
+			$key = 'bfst_sitemap_' . md5( $post->post_type . '_' . $page );
+			delete_transient( $key );
+		}
 
-        // Also invalidate the sitemap index.
-        SitemapIndex::invalidate();
-    }
+		// Also invalidate the sitemap index.
+		SitemapIndex::invalidate();
+	}
 
-    /**
-     * Attributes for the opening <urlset> element.
-     *
-     * The base plugin declares only the sitemap namespace. The Pro add-on
-     * overrides this to add the image namespace alongside it — declaring a
-     * namespace whose elements never appear would be wrong, and the base
-     * plugin emits no <image:image>.
-     *
-     * @return string
-     */
-    protected function urlset_attributes(): string {
-        return 'xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"';
-    }
+	/**
+	 * Attributes for the opening <urlset> element.
+	 *
+	 * The base plugin declares only the sitemap namespace. The Pro add-on
+	 * overrides this to add the image namespace alongside it — declaring a
+	 * namespace whose elements never appear would be wrong, and the base
+	 * plugin emits no <image:image>.
+	 *
+	 * @return string
+	 */
+	protected function urlset_attributes(): string {
+		return 'xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"';
+	}
 
-    /**
-     * Resolve anything a subclass needs before the URLs are written.
-     *
-     * Called once per sitemap with every post ID it will contain, so a subclass
-     * can run one batched query instead of one per URL.
-     *
-     * @param int[] $post_ids
-     */
-    protected function prepare_entries( array $post_ids ): void {
-    }
+	/**
+	 * Resolve anything a subclass needs before the URLs are written.
+	 *
+	 * Called once per sitemap with every post ID it will contain, so a subclass
+	 * can run one batched query instead of one per URL.
+	 *
+	 * @param int[] $post_ids Post IDs on the sitemap page.
+	 */
+	protected function prepare_entries( array $post_ids ): void {
+	}
 
-    /**
-     * Extra lines to nest inside a single <url> element.
-     *
-     * The Pro add-on returns its <image:image> blocks here.
-     *
-     * @param int $post_id
-     * @return string[]
-     */
-    protected function extra_url_lines( int $post_id ): array {
-        return [];
-    }
+	/**
+	 * Extra lines to nest inside a single <url> element.
+	 *
+	 * The Pro add-on returns its <image:image> blocks here.
+	 *
+	 * @param int $post_id Post ID.
+	 * @return string[]
+	 */
+	protected function extra_url_lines( int $post_id ): array { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found -- extension point; Pro overrides it and uses the ID.
+		return [];
+	}
 
-    /**
-     * Render a page of the post type sitemap.
-     *
-     * @param string $post_type Post type slug.
-     * @param int    $page      Sitemap page number (1-based).
-     * @return string XML string.
-     */
-    public function render( string $post_type, int $page ): string {
-        $transient_key = 'bfst_sitemap_' . md5( $post_type . '_' . $page );
+	/**
+	 * Render a page of the post type sitemap.
+	 *
+	 * @param string $post_type Post type slug.
+	 * @param int    $page      Sitemap page number (1-based).
+	 * @return string XML string.
+	 */
+	public function render( string $post_type, int $page ): string {
+		$transient_key = 'bfst_sitemap_' . md5( $post_type . '_' . $page );
 
-        $cached = get_transient( $transient_key );
-        if ( is_string( $cached ) && $cached !== '' ) {
-            return $cached;
-        }
+		$cached = get_transient( $transient_key );
+		if ( is_string( $cached ) && '' !== $cached ) {
+			return $cached;
+		}
 
-        // Refuse pages past the end of the result set.
-        //
-        // The rewrite rule accepts any number of digits and nothing bounded it,
-        // so /sitemap-post-900001.xml used to return 200, run a WP_Query with a
-        // 900-million-row offset, and cache the empty result for a day. Five
-        // such requests wrote five rows into wp_options; there was no limit on
-        // how many an unauthenticated visitor could add.
-        //
-        // The COUNT below is indexed and cheap. It is paid once per uncached
-        // page, and it replaces an offset scan that is not.
-        if ( $page > $this->page_count( $post_type ) ) {
-            return '';
-        }
+		// Refuse pages past the end of the result set.
+		//
+		// The rewrite rule accepts any number of digits and nothing bounded it,
+		// so /sitemap-post-900001.xml used to return 200, run a WP_Query with a
+		// 900-million-row offset, and cache the empty result for a day. Five
+		// such requests wrote five rows into wp_options; there was no limit on
+		// how many an unauthenticated visitor could add.
+		//
+		// The COUNT below is indexed and cheap. It is paid once per uncached
+		// page, and it replaces an offset scan that is not.
+		if ( $page > $this->page_count( $post_type ) ) {
+			return '';
+		}
 
-        $xml = $this->build_xml( $post_type, $page );
+		$xml = $this->build_xml( $post_type, $page );
 
-        // Never cache a page with no URLs in it. Anything that reaches here
-        // empty is a page the count said should exist, so it is a race with a
-        // deletion rather than a request to be trusted — and caching it would
-        // hide the real content for a day.
-        if ( ! str_contains( $xml, '<url>' ) ) {
-            return '';
-        }
+		// Never cache a page with no URLs in it. Anything that reaches here
+		// empty is a page the count said should exist, so it is a race with a
+		// deletion rather than a request to be trusted — and caching it would
+		// hide the real content for a day.
+		if ( ! str_contains( $xml, '<url>' ) ) {
+			return '';
+		}
 
-        set_transient( $transient_key, $xml, DAY_IN_SECONDS );
-        SitemapManager::remember_cache_key( $transient_key );
+		set_transient( $transient_key, $xml, DAY_IN_SECONDS );
+		SitemapManager::remember_cache_key( $transient_key );
 
-        return $xml;
-    }
+		return $xml;
+	}
 
-    /**
-     * How many pages this post type's sitemap actually has.
-     *
-     * Always at least 1, so an empty post type still resolves to a valid
-     * (empty) first page rather than 404ing the URL the index advertises.
-     *
-     * @param string $post_type
-     * @return int
-     */
-    /**
-     * How often a crawler should expect this URL to change, from its age.
-     *
-     * The 1.0.0 flat sitemap emitted this and the 1.1.0 rewrite dropped it,
-     * while the readme, the features guide, MARKETING.txt and the generated PDF
-     * all went on describing the exact thresholds below. Restoring it is
-     * cheaper and more honest than editing four documents to say the plugin no
-     * longer does something it used to.
-     *
-     * @param \WP_Post $post
-     * @return string One of daily, weekly, monthly.
-     */
-    protected static function changefreq_for( \WP_Post $post ): string {
-        $modified = (int) strtotime( $post->post_modified_gmt );
-        if ( $modified <= 0 ) {
-            return 'monthly';
-        }
+	/**
+	 * How many pages this post type's sitemap actually has.
+	 *
+	 * Always at least 1, so an empty post type still resolves to a valid
+	 * (empty) first page rather than 404ing the URL the index advertises.
+	 *
+	 * @param string $post_type
+	 * @return int
+	 */
+	/**
+	 * How often a crawler should expect this URL to change, from its age.
+	 *
+	 * The 1.0.0 flat sitemap emitted this and the 1.1.0 rewrite dropped it,
+	 * while the readme, the features guide, MARKETING.txt and the generated PDF
+	 * all went on describing the exact thresholds below. Restoring it is
+	 * cheaper and more honest than editing four documents to say the plugin no
+	 * longer does something it used to.
+	 *
+	 * @param \WP_Post $post The post.
+	 * @return string One of daily, weekly, monthly.
+	 */
+	protected static function changefreq_for( \WP_Post $post ): string {
+		$modified = (int) strtotime( $post->post_modified_gmt );
+		if ( $modified <= 0 ) {
+			return 'monthly';
+		}
 
-        $age_days = ( time() - $modified ) / DAY_IN_SECONDS;
+		$age_days = ( time() - $modified ) / DAY_IN_SECONDS;
 
-        if ( $age_days < 7 ) {
-            return 'daily';
-        }
-        if ( $age_days < 90 ) {
-            return 'weekly';
-        }
-        return 'monthly';
-    }
+		if ( $age_days < 7 ) {
+			return 'daily';
+		}
+		if ( $age_days < 90 ) {
+			return 'weekly';
+		}
+		return 'monthly';
+	}
 
-    /**
-     * Exclude WooCommerce products the store owner has hidden.
-     *
-     * Catalog visibility has lived in the `product_visibility` taxonomy since
-     * WooCommerce 3.0 (2017). This plugin shipped a meta_query against the
-     * `_visibility` post meta key instead, which WooCommerce stopped writing
-     * eight years ago: on WooCommerce 11 the only rows carrying it are legacy
-     * leftovers, all of them reading "visible". The condition therefore
-     * excluded nothing, and products marked Hidden appeared in the sitemap.
-     *
-     * `NOT IN` is safe here despite the usual warning about nullable subquery
-     * columns: WordPress compiles it to `ID NOT IN (SELECT object_id ...)` over
-     * the relationships table, whose object_id is never NULL, and a product
-     * carrying no visibility terms simply is not in the subquery.
-     *
-     * @param string $post_type
-     * @return array<int, array<string, mixed>> A tax_query, or [] when not applicable.
-     */
-    protected static function visibility_tax_query( string $post_type ): array {
-        if ( $post_type !== 'product' || ! taxonomy_exists( 'product_visibility' ) ) {
-            return [];
-        }
+	/**
+	 * Exclude WooCommerce products the store owner has hidden.
+	 *
+	 * Catalog visibility has lived in the `product_visibility` taxonomy since
+	 * WooCommerce 3.0 (2017). This plugin shipped a meta_query against the
+	 * `_visibility` post meta key instead, which WooCommerce stopped writing
+	 * eight years ago: on WooCommerce 11 the only rows carrying it are legacy
+	 * leftovers, all of them reading "visible". The condition therefore
+	 * excluded nothing, and products marked Hidden appeared in the sitemap.
+	 *
+	 * `NOT IN` is safe here despite the usual warning about nullable subquery
+	 * columns: WordPress compiles it to `ID NOT IN (SELECT object_id ...)` over
+	 * the relationships table, whose object_id is never NULL, and a product
+	 * carrying no visibility terms simply is not in the subquery.
+	 *
+	 * @param string $post_type Post type slug.
+	 * @return array<int, array<string, mixed>> A tax_query, or [] when not applicable.
+	 */
+	protected static function visibility_tax_query( string $post_type ): array {
+		if ( 'product' !== $post_type || ! taxonomy_exists( 'product_visibility' ) ) {
+			return [];
+		}
 
-        return [
-            [
-                'taxonomy' => 'product_visibility',
-                'field'    => 'slug',
-                'terms'    => [ 'exclude-from-catalog', 'exclude-from-search' ],
-                'operator' => 'NOT IN',
-            ],
-        ];
-    }
+		return [
+			[
+				'taxonomy' => 'product_visibility',
+				'field'    => 'slug',
+				'terms'    => [ 'exclude-from-catalog', 'exclude-from-search' ],
+				'operator' => 'NOT IN',
+			],
+		];
+	}
 
-    protected function page_count( string $post_type ): int {
-        $query = new \WP_Query(
-            [
-                'post_type'              => $post_type,
-                'post_status'            => SitemapManager::post_status_for( $post_type ),
-                'posts_per_page'         => 1,
-                'fields'                 => 'ids',
-                'no_found_rows'          => false,
-                'update_post_term_cache' => false,
-                'update_post_meta_cache' => false,
-                'has_password'           => false,
-                'meta_query'             => SitemapManager::exclusion_meta_query( $post_type ),
-                // Must match build_xml() exactly. When it did not, the index
-                // advertised a page count computed over a larger set than the
-                // pages themselves contained.
-                'tax_query'              => self::visibility_tax_query( $post_type ),
-            ]
-        );
+	/**
+	 * Number of sitemap pages the post type needs (same query as build_xml()).
+	 *
+	 * @param string $post_type Post type slug.
+	 * @return int
+	 */
+	protected function page_count( string $post_type ): int {
+		$query = new \WP_Query(
+			[
+				'post_type'              => $post_type,
+				'post_status'            => SitemapManager::post_status_for( $post_type ),
+				'posts_per_page'         => 1,
+				'fields'                 => 'ids',
+				'no_found_rows'          => false,
+				'update_post_term_cache' => false,
+				'update_post_meta_cache' => false,
+				'has_password'           => false,
+				'meta_query'             => SitemapManager::exclusion_meta_query( $post_type ), // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- sitemap exclusion needs a meta query; bounded, cached output.
+				// Must match build_xml() exactly. When it did not, the index
+				// advertised a page count computed over a larger set than the
+				// pages themselves contained.
+				'tax_query'              => self::visibility_tax_query( $post_type ), // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query -- hides WooCommerce products excluded from the catalog.
+			]
+		);
 
-        return max( 1, (int) ceil( (int) $query->found_posts / self::POSTS_PER_PAGE ) );
-    }
+		return max( 1, (int) ceil( (int) $query->found_posts / self::POSTS_PER_PAGE ) );
+	}
 
-    /**
-     * Build the XML for one page of a post type sitemap.
-     *
-     * @param string $post_type
-     * @param int    $page
-     * @return string
-     */
-    protected function build_xml( string $post_type, int $page ): string {
-        $query_args = [
-            'post_type'              => $post_type,
-            'post_status'            => SitemapManager::post_status_for( $post_type ),
-            'posts_per_page'         => self::POSTS_PER_PAGE,
-            'paged'                  => $page,
-            'no_found_rows'          => true,
-            'update_post_term_cache' => false,
-            'update_post_meta_cache' => false,
-            'has_password'           => false,
-            // Query-level exclusion so pagination counts remain correct, and
-            // shared with page_count() so the two cannot drift apart.
-            'meta_query'             => SitemapManager::exclusion_meta_query( $post_type ),
-        ];
+	/**
+	 * Build the XML for one page of a post type sitemap.
+	 *
+	 * @param string $post_type Post type slug.
+	 * @param int    $page 1-based sitemap page number.
+	 * @return string
+	 */
+	protected function build_xml( string $post_type, int $page ): string {
+		$query_args = [
+			'post_type'              => $post_type,
+			'post_status'            => SitemapManager::post_status_for( $post_type ),
+			'posts_per_page'         => self::POSTS_PER_PAGE,
+			'paged'                  => $page,
+			'no_found_rows'          => true,
+			'update_post_term_cache' => false,
+			'update_post_meta_cache' => false,
+			'has_password'           => false,
+			// Query-level exclusion so pagination counts remain correct, and
+			// shared with page_count() so the two cannot drift apart.
+			'meta_query'             => SitemapManager::exclusion_meta_query( $post_type ), // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- sitemap exclusion needs a meta query; bounded, cached output.
+		];
 
-        $visibility = self::visibility_tax_query( $post_type );
-        if ( $visibility !== [] ) {
-            $query_args['tax_query'] = $visibility;
-        }
+		$visibility = self::visibility_tax_query( $post_type );
+		if ( [] !== $visibility ) {
+			$query_args['tax_query'] = $visibility; // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query -- hides WooCommerce products excluded from the catalog.
+		}
 
-        $query = new \WP_Query( $query_args );
-        $posts = $query->posts;
+		$query = new \WP_Query( $query_args );
+		$posts = $query->posts;
 
-        if ( ! is_array( $posts ) || empty( $posts ) ) {
-            return $this->empty_xml();
-        }
+		if ( ! is_array( $posts ) || empty( $posts ) ) {
+			return $this->empty_xml();
+		}
 
-        // Collect post IDs so a subclass can resolve extras in one batched query
-        // rather than one per URL.
-        $post_ids = array_map(
-            static fn( $p ) => $p instanceof \WP_Post ? $p->ID : 0,
-            $posts
-        );
-        $post_ids = array_filter( $post_ids );
+		// Collect post IDs so a subclass can resolve extras in one batched query
+		// rather than one per URL.
+		$post_ids = array_map(
+			static fn( $p ) => $p instanceof \WP_Post ? $p->ID : 0,
+			$posts
+		);
+		$post_ids = array_filter( $post_ids );
 
-        $this->prepare_entries( $post_ids );
+		$this->prepare_entries( $post_ids );
 
-        $lines   = [];
-        $lines[] = '<?xml version="1.0" encoding="UTF-8"?>';
-        $lines[] = '<urlset ' . $this->urlset_attributes() . '>';
+		$lines   = [];
+		$lines[] = '<?xml version="1.0" encoding="UTF-8"?>';
+		$lines[] = '<urlset ' . $this->urlset_attributes() . '>';
 
-        foreach ( $posts as $post ) {
-            if ( ! $post instanceof \WP_Post ) {
-                continue;
-            }
+		foreach ( $posts as $post ) {
+			if ( ! $post instanceof \WP_Post ) {
+				continue;
+			}
 
-            $permalink = get_permalink( $post->ID );
-            if ( ! is_string( $permalink ) || $permalink === '' ) {
-                continue;
-            }
+			$permalink = get_permalink( $post->ID );
+			if ( ! is_string( $permalink ) || '' === $permalink ) {
+				continue;
+			}
 
-            $lastmod = gmdate( 'Y-m-d', (int) strtotime( $post->post_modified_gmt ) );
+			$lastmod = gmdate( 'Y-m-d', (int) strtotime( $post->post_modified_gmt ) );
 
-            $lines[] = '  <url>';
-            $lines[] = '    <loc>' . esc_url( $permalink ) . '</loc>';
-            $lines[] = '    <lastmod>' . esc_html( $lastmod ) . '</lastmod>';
-            $lines[] = '    <changefreq>' . esc_html( self::changefreq_for( $post ) ) . '</changefreq>';
+			$lines[] = '  <url>';
+			$lines[] = '    <loc>' . esc_url( $permalink ) . '</loc>';
+			$lines[] = '    <lastmod>' . esc_html( $lastmod ) . '</lastmod>';
+			$lines[] = '    <changefreq>' . esc_html( self::changefreq_for( $post ) ) . '</changefreq>';
 
-            foreach ( $this->extra_url_lines( $post->ID ) as $line ) {
-                $lines[] = $line;
-            }
+			foreach ( $this->extra_url_lines( $post->ID ) as $line ) {
+				$lines[] = $line;
+			}
 
-            $lines[] = '  </url>';
-        }
+			$lines[] = '  </url>';
+		}
 
-        $lines[] = '</urlset>';
+		$lines[] = '</urlset>';
 
-        return implode( "\n", $lines );
-    }
+		return implode( "\n", $lines );
+	}
 
-    /**
-     * Return an empty but valid sitemap XML document.
-     *
-     * @return string
-     */
-    protected function empty_xml(): string {
-        return '<?xml version="1.0" encoding="UTF-8"?>' . "\n" .
-               '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>';
-    }
+	/**
+	 * Return an empty but valid sitemap XML document.
+	 *
+	 * @return string
+	 */
+	protected function empty_xml(): string {
+		return '<?xml version="1.0" encoding="UTF-8"?>' . "\n" .
+				'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>';
+	}
 }
