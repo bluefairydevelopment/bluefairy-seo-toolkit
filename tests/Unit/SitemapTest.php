@@ -129,6 +129,7 @@ final class SitemapTest extends TestCase {
 	}
 
 	public function test_post_type_sitemap_lists_each_post_with_escaped_loc_and_dates(): void {
+		update_option( 'show_on_front', 'page' ); // The home entry has its own test.
 		$this->posts(
 			[ 'ID' => 1, 'post_modified_gmt' => gmdate( 'Y-m-d H:i:s', time() - 86400 ), 'url' => 'https://example.test/a?x=1&y=2' ],
 			[ 'ID' => 2, 'post_modified_gmt' => '2020-05-06 07:08:09', 'url' => '' ]
@@ -186,6 +187,30 @@ final class SitemapTest extends TestCase {
 
 		set_transient( $key, 'CACHED' );
 		$this->assertSame( 'CACHED', $s->render( 'post', 1 ) );
+	}
+
+	/**
+	 * WPMAP-236: the home page (latest posts on the front page) is listed
+	 * first in the post sitemap's first page; not with a static front page
+	 * (that page is in the page sitemap already), not on later pages, not in
+	 * other post types' sitemaps.
+	 */
+	public function test_the_posts_home_page_leads_the_first_post_sitemap(): void {
+		$this->posts(
+			[ 'ID' => 1, 'url' => 'https://example.test/one/', 'post_modified_gmt' => '2026-01-01 00:00:00' ],
+			[ 'ID' => 2, 'url' => 'https://example.test/two/', 'post_modified_gmt' => '2026-03-04 00:00:00' ]
+		);
+		update_option( 'show_on_front', 'posts' );
+		$xml = ( new PtsProbe() )->xml( 'post', 1 );
+		$this->assertStringContainsString(
+			"<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n  <url>\n    <loc>https://example.test/</loc>\n    <lastmod>2026-03-04</lastmod>\n    <changefreq>daily</changefreq>\n  </url>\n  <url>\n    <loc>https://example.test/one/</loc>",
+			$xml
+		);
+		$this->assertSame( 1, substr_count( $xml, '<loc>https://example.test/</loc>' ) );
+		$this->assertStringNotContainsString( '<loc>https://example.test/</loc>', ( new PtsProbe() )->xml( 'post', 2 ) );
+		$this->assertStringNotContainsString( '<loc>https://example.test/</loc>', ( new PtsProbe() )->xml( 'page', 1 ) );
+		update_option( 'show_on_front', 'page' );
+		$this->assertStringNotContainsString( '<loc>https://example.test/</loc>', ( new PtsProbe() )->xml( 'post', 1 ) );
 	}
 
 	public function test_an_empty_page_is_neither_served_nor_cached(): void {

@@ -69,6 +69,14 @@ The free plugin covers **posts and pages**. Each sitemap carries, per URL:
 - `<changefreq>` — derived from the age of the post: `daily` under 7 days,
   `weekly` under 90 days, `monthly` beyond that
 
+### The home page
+
+When **Settings > Reading** shows your latest posts on the front page, the home
+page is listed first in `/sitemap-post-1.xml` (from 1.1.4), with the date of the
+newest post on that page and `daily` as its change frequency. With a static
+front page nothing is added, because that page is already in the page sitemap.
+If posts are excluded from the sitemap, the home page is not listed either.
+
 ### Pagination
 
 1,000 URLs per file. A site with 2,500 posts gets `sitemap-post-1.xml`,

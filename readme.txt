@@ -115,6 +115,7 @@ Deleting the plugin through the Plugins screen removes every option it created a
 == Changelog ==
 
 = 1.1.4 =
+* Changed: when the front page shows your latest posts, the home page is now listed first in the post sitemap. Sites with a static front page are unchanged.
 * Fixed: a post type with no published entries (for example a site with no published pages) was still listed in the sitemap index, and that listed sitemap returned a 404. It is now left out until it has something in it.
 
 = 1.1.3 =
@@ -158,7 +159,7 @@ Deleting the plugin through the Plugins screen removes every option it created a
 == Upgrade Notice ==
 
 = 1.1.4 =
-Bug fix: the sitemap index no longer lists an empty post type's sitemap. No action required.
+The home page is now in the sitemap when the front page shows your latest posts, and the sitemap index no longer lists an empty post type's sitemap. No action required.
 
 = 1.1.3 =
 Maintenance release; deleting the plugin now also removes its sitemap cache list. No action required.
