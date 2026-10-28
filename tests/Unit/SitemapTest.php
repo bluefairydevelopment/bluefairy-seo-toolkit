@@ -282,18 +282,31 @@ final class SitemapTest extends TestCase {
 		$this->assertSame( "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<sitemapindex xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n  <sitemap>\n    <loc>https://example.test/a</loc>\n  </sitemap>\n</sitemapindex>", $i->to_xml( [ [ 'loc' => 'https://example.test/a', 'lastmod' => '' ] ] ) );
 	}
 
-	public function test_index_counts_exclude_hidden_products_when_woocommerce_runs(): void {
-		[ $out, $status ] = self::run_isolated(
-			<<<'PHP'
-			function wc_get_product() {}
-			$GLOBALS['bfst_wp']['wp_query']['found_posts'] = 3;
-			$r = new ReflectionMethod( BlueFairy\SeoToolkit\Sitemap\SitemapIndex::class, 'count_posts' );
-			$n = $r->invoke( new BlueFairy\SeoToolkit\Sitemap\SitemapIndex(), 'product' );
-			echo $n, ' ', json_encode( end( $GLOBALS['bfst_wp']['queries'] )['meta_query'][1] );
-			PHP
-		);
-		$this->assertSame( 0, $status, $out );
-		$this->assertSame( '3 {"relation":"OR","0":{"key":"_visibility","value":"hidden","compare":"!="},"1":{"key":"_visibility","compare":"NOT EXISTS"}}', $out );
+	/**
+	 * The index's count and the router's page count must run the SAME query.
+	 * When they differed (no has_password, stale _visibility meta instead of
+	 * the product_visibility taxonomy), a type whose only entries were
+	 * password-protected or hidden products was listed and then 404'd.
+	 */
+	public function test_index_counts_with_the_query_the_router_uses(): void {
+		$GLOBALS['bfst_wp']['taxonomy_exists']['product_visibility'] = true;
+		foreach ( [ 'post', 'product' ] as $type ) {
+			( new IndexProbe() )->count( $type );
+			$index_q = end( $GLOBALS['bfst_wp']['queries'] );
+			( new PtsProbe() )->pages( $type );
+			$router_q = end( $GLOBALS['bfst_wp']['queries'] );
+			$this->assertSame( $router_q, $index_q, $type );
+			$this->assertFalse( $index_q['has_password'], $type );
+		}
+		$this->assertSame( 'product_visibility', $index_q['tax_query'][0]['taxonomy'] );
+	}
+
+	public function test_count_entries_returns_found_posts_and_page_count_floors_at_one(): void {
+		$GLOBALS['bfst_wp']['wp_query']['found_posts'] = 0;
+		$this->assertSame( 0, PostTypeSitemap::count_entries( 'post' ) );
+		$this->assertSame( 0, ( new IndexProbe() )->count( 'post' ) );
+		$GLOBALS['bfst_wp']['wp_query']['found_posts'] = 7;
+		$this->assertSame( 7, PostTypeSitemap::count_entries( 'post' ) );
 	}
 
 	public function test_set_handler_swaps_the_class_used_for_a_sitemap_kind(): void {

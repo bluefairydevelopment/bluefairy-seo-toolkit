@@ -123,40 +123,16 @@ class SitemapIndex {
 	}
 
 	/**
-	 * Count published posts for a post type (excluding excluded and hidden WC products).
+	 * Count the URLs a post type's sitemap holds.
+	 *
+	 * Delegates to PostTypeSitemap::count_entries(), the query the router
+	 * itself uses, so the index and the router can never disagree (WPMAP-235).
 	 *
 	 * @param string $post_type Post type slug.
 	 * @return int
 	 */
 	protected function count_posts( string $post_type ): int {
-		$args = [
-			'post_type'              => $post_type,
-			'post_status'            => SitemapManager::post_status_for( $post_type ),
-			'posts_per_page'         => 1,
-			'no_found_rows'          => false,
-			'update_post_term_cache' => false,
-			'update_post_meta_cache' => false,
-			'meta_query'             => SitemapManager::exclusion_meta_query( $post_type ), // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- sitemap exclusion needs a meta query; bounded, cached output.
-		];
-
-		// WooCommerce visibility: exclude hidden products.
-		if ( 'product' === $post_type && function_exists( 'wc_get_product' ) ) {
-			$args['meta_query'][] = [
-				'relation' => 'OR',
-				[
-					'key'     => '_visibility',
-					'value'   => 'hidden',
-					'compare' => '!=',
-				],
-				[
-					'key'     => '_visibility',
-					'compare' => 'NOT EXISTS',
-				],
-			];
-		}
-
-		$query = new \WP_Query( $args );
-		return (int) $query->found_posts;
+		return PostTypeSitemap::count_entries( $post_type );
 	}
 
 	/**
