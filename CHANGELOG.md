@@ -12,7 +12,7 @@ Versioning follows [Semantic Versioning](https://semver.org/): major = architect
 ### Fixed
 - The plugin package no longer includes developer and internal files that were never meant to ship.
 
-1.1.1] — 2026-08-31
+## [1.1.1] — 2026-08-31
 
 ### Added
 - `bfst_sitemap_exclusion_meta_query` filter on the meta_query that keeps posts
