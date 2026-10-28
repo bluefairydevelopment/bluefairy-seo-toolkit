@@ -51,15 +51,15 @@ class PostTypeSitemap {
 	}
 
 	/**
-	 * Drop the cached page that carries the home entry, and the index.
+	 * Drop the cached index, which lists the home sitemap or not.
 	 *
 	 * Whether the home page is listed depends on Settings > Reading, which no
-	 * post save reports; without this a change there showed up a day late.
+	 * post save reports; without this a change there showed up an hour late.
+	 * The home sitemap itself is not cached.
 	 *
 	 * @since 1.1.4
 	 */
 	public static function invalidate_home_entry(): void {
-		delete_transient( 'bfst_sitemap_' . md5( 'post_1' ) );
 		SitemapIndex::invalidate();
 	}
 
@@ -279,45 +279,6 @@ class PostTypeSitemap {
 	}
 
 	/**
-	 * The home page entry, when the front page shows the latest posts.
-	 *
-	 * That page is no post, so no post-type sitemap carried it and the site's
-	 * own home page was missing from the sitemap. It leads the first page of
-	 * the post sitemap, because the posts index is what it lists. With a
-	 * static front page nothing is added: that page is in the page sitemap.
-	 *
-	 * @since 1.1.4
-	 *
-	 * @param string           $post_type Post type being built.
-	 * @param int              $page      Sitemap page number.
-	 * @param array<int,mixed> $posts     Posts on this page (newest lastmod wins).
-	 * @return string[]
-	 */
-	protected function home_url_lines( string $post_type, int $page, array $posts ): array {
-		// A static front page needs both settings: with "a static page" chosen
-		// but none selected, WordPress still shows the latest posts.
-		$static_front = 'page' === get_option( 'show_on_front' ) && (int) get_option( 'page_on_front' ) > 0;
-		if ( 'post' !== $post_type || 1 !== $page || $static_front ) {
-			return [];
-		}
-
-		$newest = 0;
-		foreach ( $posts as $post ) {
-			if ( $post instanceof \WP_Post ) {
-				$newest = max( $newest, (int) strtotime( $post->post_modified_gmt ) );
-			}
-		}
-
-		return [
-			'  <url>',
-			'    <loc>' . esc_url( home_url( '/' ) ) . '</loc>',
-			'    <lastmod>' . esc_html( gmdate( 'Y-m-d', $newest ) ) . '</lastmod>',
-			'    <changefreq>daily</changefreq>',
-			'  </url>',
-		];
-	}
-
-	/**
 	 * Build the XML for one page of a post type sitemap.
 	 *
 	 * @param string $post_type Post type slug.
@@ -365,10 +326,6 @@ class PostTypeSitemap {
 		$lines[] = '<?xml version="1.0" encoding="UTF-8"?>';
 		$lines[] = '<urlset ' . $this->urlset_attributes() . '>';
 
-		foreach ( $this->home_url_lines( $post_type, $page, $posts ) as $line ) {
-			$lines[] = $line;
-		}
-
 		foreach ( $posts as $post ) {
 			if ( ! $post instanceof \WP_Post ) {
 				continue;
@@ -379,11 +336,15 @@ class PostTypeSitemap {
 				continue;
 			}
 
-			$lastmod = gmdate( 'Y-m-d', (int) strtotime( $post->post_modified_gmt ) );
+			$lastmod = SitemapManager::lastmod( $post->post_modified_gmt );
 
 			$lines[] = '  <url>';
 			$lines[] = '    <loc>' . esc_url( $permalink ) . '</loc>';
-			$lines[] = '    <lastmod>' . esc_html( $lastmod ) . '</lastmod>';
+			// An unset date ('0000-00-00 00:00:00', common in imported content)
+			// gets no <lastmod> rather than 1970-01-01.
+			if ( '' !== $lastmod ) {
+				$lines[] = '    <lastmod>' . esc_html( $lastmod ) . '</lastmod>';
+			}
 			$lines[] = '    <changefreq>' . esc_html( self::changefreq_for( $post ) ) . '</changefreq>';
 
 			foreach ( $this->extra_url_lines( $post->ID ) as $line ) {

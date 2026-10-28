@@ -11,9 +11,12 @@ Versioning follows [Semantic Versioning](https://semver.org/): major = architect
 
 ### Changed
 - When the front page shows your latest posts, the home page is now listed in
-  the sitemap, as the first entry of `/sitemap-post-1.xml`. It was missing
-  before. Sites with a static front page are unchanged: that page is already
-  in the page sitemap.
+  the sitemap, in its own `/sitemap-frontpage-1.xml`, the first entry of the
+  sitemap index. It was missing before. It is listed even when no post is
+  published yet or posts are excluded from the sitemap. Sites with a static
+  front page are unchanged: that page is already in the page sitemap.
+- A post whose modification date is unset (`0000-00-00 00:00:00`, common in
+  imported content) gets no `<lastmod>`; before, it showed 1970-01-01.
 
 ### Fixed
 - A post type with no published entries was still listed in the sitemap index

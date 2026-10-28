@@ -190,34 +190,6 @@ final class SitemapTest extends TestCase {
 		$this->assertSame( 'CACHED', $s->render( 'post', 1 ) );
 	}
 
-	/**
-	 * WPMAP-236: the home page (latest posts on the front page) is listed
-	 * first in the post sitemap's first page; not with a static front page
-	 * (that page is in the page sitemap already), not on later pages, not in
-	 * other post types' sitemaps.
-	 */
-	public function test_the_posts_home_page_leads_the_first_post_sitemap(): void {
-		$this->posts(
-			[ 'ID' => 1, 'url' => 'https://example.test/one/', 'post_modified_gmt' => '2026-01-01 00:00:00' ],
-			[ 'ID' => 2, 'url' => 'https://example.test/two/', 'post_modified_gmt' => '2026-03-04 00:00:00' ]
-		);
-		update_option( 'show_on_front', 'posts' );
-		$xml = ( new PtsProbe() )->xml( 'post', 1 );
-		$this->assertStringContainsString(
-			"<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n  <url>\n    <loc>https://example.test/</loc>\n    <lastmod>2026-03-04</lastmod>\n    <changefreq>daily</changefreq>\n  </url>\n  <url>\n    <loc>https://example.test/one/</loc>",
-			$xml
-		);
-		$this->assertSame( 1, substr_count( $xml, '<loc>https://example.test/</loc>' ) );
-		$this->assertStringNotContainsString( '<loc>https://example.test/</loc>', ( new PtsProbe() )->xml( 'post', 2 ) );
-		$this->assertStringNotContainsString( '<loc>https://example.test/</loc>', ( new PtsProbe() )->xml( 'page', 1 ) );
-		update_option( 'show_on_front', 'page' );
-		update_option( 'page_on_front', 9 );
-		$this->assertStringNotContainsString( '<loc>https://example.test/</loc>', ( new PtsProbe() )->xml( 'post', 1 ) );
-		// "A static page" chosen but none selected: WordPress shows the latest posts.
-		update_option( 'page_on_front', 0 );
-		$this->assertStringContainsString( '<loc>https://example.test/</loc>', ( new PtsProbe() )->xml( 'post', 1 ) );
-	}
-
 	public function test_an_empty_page_is_neither_served_nor_cached(): void {
 		$GLOBALS['bfst_wp']['wp_query'] = [ 'posts' => [], 'found_posts' => 0 ];
 		$this->assertSame( '', ( new PostTypeSitemap() )->render( 'post', 1 ) );
@@ -259,7 +231,7 @@ final class SitemapTest extends TestCase {
 		set_transient( 'bfst_sitemap_' . md5( 'post_2' ), 'x' );
 		set_transient( 'bfst_sitemap_index', 'x' );
 		PostTypeSitemap::invalidate_home_entry();
-		$this->assertSame( [ 'bfst_sitemap_' . md5( 'post_2' ) ], array_keys( $GLOBALS['bfst_wp']['transients'] ) );
+		$this->assertSame( [ 'bfst_sitemap_' . md5( 'post_1' ), 'bfst_sitemap_' . md5( 'post_2' ) ], array_keys( $GLOBALS['bfst_wp']['transients'] ), 'the index lists the home sitemap; post pages no longer carry it' );
 	}
 
 	public function test_register_invalidation_hooks(): void {
@@ -268,6 +240,8 @@ final class SitemapTest extends TestCase {
 	}
 
 	public function test_index_lists_a_page_per_1000_posts_skipping_excluded_types(): void {
+		update_option( 'show_on_front', 'page' ); // The home sitemap has its own tests (HomeSitemapTest).
+		update_option( 'page_on_front', 9 );
 		update_option( 'bfst_sitemap_exclusions', [ 'page' => true ] );
 		$GLOBALS['bfst_wp']['wp_query']['found_posts'] = 1500;
 		$GLOBALS['bfst_wp']['get_posts']               = [ new \WP_Post( (object) [ 'post_modified_gmt' => '2026-02-03 04:05:06' ] ) ];
@@ -286,6 +260,8 @@ final class SitemapTest extends TestCase {
 	 * pages (render() returns ''), so the index has to skip it to agree.
 	 */
 	public function test_index_skips_a_post_type_with_no_published_posts(): void {
+		update_option( 'show_on_front', 'page' ); // The home sitemap has its own tests (HomeSitemapTest).
+		update_option( 'page_on_front', 9 );
 		$GLOBALS['bfst_wp']['wp_query']['found_posts_by_type'] = [ 'post' => 3, 'page' => 0 ];
 		$GLOBALS['bfst_wp']['get_posts']                       = [ new \WP_Post( (object) [ 'post_modified_gmt' => '2026-02-03 04:05:06' ] ) ];
 		$this->assertSame(
@@ -382,7 +358,7 @@ final class SitemapTest extends TestCase {
 	public function test_route_serves_the_index_a_post_page_and_filtered_kinds_then_exits(): void {
 		$run = static fn( string $setup ) => self::run_isolated( $setup . "\nBlueFairy\\SeoToolkit\\Sitemap\\SitemapManager::route_sitemap();\necho 'NOT EXITED';" );
 
-		[ $out, $status ] = $run( "\$GLOBALS['bfst_wp']['wp_query']['found_posts'] = 1; \$GLOBALS['bfst_wp']['query_vars']['bfst_sitemap'] = 'index';" );
+		[ $out, $status ] = $run( "update_option( 'show_on_front', 'page' ); update_option( 'page_on_front', 9 ); \$GLOBALS['bfst_wp']['wp_query']['found_posts'] = 1; \$GLOBALS['bfst_wp']['query_vars']['bfst_sitemap'] = 'index';" );
 		$this->assertSame( 0, $status, $out );
 		$this->assertSame( "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<sitemapindex xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n  <sitemap>\n    <loc>https://example.test/sitemap-post-1.xml</loc>\n    <lastmod>" . gmdate( 'Y-m-d' ) . "</lastmod>\n  </sitemap>\n  <sitemap>\n    <loc>https://example.test/sitemap-page-1.xml</loc>\n    <lastmod>" . gmdate( 'Y-m-d' ) . "</lastmod>\n  </sitemap>\n</sitemapindex>", $out );
 

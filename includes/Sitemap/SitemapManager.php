@@ -300,6 +300,29 @@ class SitemapManager {
 	}
 
 	/**
+	 * A stored GMT datetime as a sitemap <lastmod> date (Y-m-d).
+	 *
+	 * '' for an unset or unparseable date ('0000-00-00 00:00:00' is common in
+	 * imported content): the caller then omits <lastmod>, instead of printing
+	 * 1970-01-01, which tells a crawler nothing true.
+	 *
+	 * @since 1.1.4
+	 *
+	 * @param string $gmt Datetime such as post_modified_gmt.
+	 * @return string
+	 */
+	public static function lastmod( string $gmt ): string {
+		$gmt = trim( $gmt );
+		if ( '' === $gmt ) {
+			return '';
+		}
+
+		$time = strtotime( $gmt . ' UTC' );
+
+		return false === $time || $time <= 0 ? '' : gmdate( 'Y-m-d', $time );
+	}
+
+	/**
 	 * Route incoming requests to the appropriate sitemap handler.
 	 *
 	 * Called on template_redirect. Checks for bfst_sitemap query var and
@@ -337,6 +360,15 @@ class SitemapManager {
 			$handler = new $class();
 			echo $handler->render(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- XML output
 			exit;
+		}
+
+		// The home page's own sitemap (1.1.4), unless a post type took the name.
+		if ( HomeSitemap::NAME === $sitemap && ! in_array( $sitemap, self::post_types(), true ) ) {
+			$output = ( new HomeSitemap() )->render( $page );
+			if ( '' !== $output ) {
+				echo $output; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- XML output
+				exit;
+			}
 		}
 
 		if ( in_array( $sitemap, self::post_types(), true ) ) {

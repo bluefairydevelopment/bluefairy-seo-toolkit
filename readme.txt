@@ -38,6 +38,7 @@ Before a URL is written into `og:url`, campaign and filter parameters are remove
 * A sitemap index at `/sitemap_index.xml`
 * One child sitemap per post type at `/sitemap-{post-type}-{n}.xml`, covering posts and pages
 * Paginated at 1,000 URLs per file
+* The home page, when it shows your latest posts, at `/sitemap-frontpage-1.xml`
 * `<lastmod>` from `post_modified_gmt`
 * `<changefreq>` derived from post age: daily (under 7 days), weekly (under 90 days), monthly beyond that
 * Password-protected posts and hidden WooCommerce products are excluded
@@ -115,7 +116,8 @@ Deleting the plugin through the Plugins screen removes every option it created a
 == Changelog ==
 
 = 1.1.4 =
-* Changed: when the front page shows your latest posts, the home page is now listed first in the post sitemap. Sites with a static front page are unchanged.
+* Changed: when the front page shows your latest posts, the home page is now listed in its own sitemap, `/sitemap-frontpage-1.xml`, first in the index, even with no published posts or posts excluded. Sites with a static front page are unchanged.
+* Fixed: a post with an unset modification date showed `<lastmod>1970-01-01</lastmod>`; the tag is now left out.
 * Fixed: a post type with no published entries (for example a site with no published pages) was still listed in the sitemap index, and that listed sitemap returned a 404. It is now left out until it has something in it.
 * Fixed: on a site with a persistent object cache (Redis, Memcached), deleting the plugin left the cached sitemap pages in the cache; they are now removed.
 * Fixed: deleting the plugin also removed the Pro add-on's cached taxonomy sitemap pages; they are now left for Pro's own uninstall.
