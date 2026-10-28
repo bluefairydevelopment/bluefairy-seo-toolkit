@@ -1,8 +1,21 @@
+includes:
+  - vendor/szepeviktor/phpstan-wordpress/extension.neon
+
 parameters:
   phpVersion: 80100
   level: 6
+  # Filter values and stored options can be any type at runtime; keep the
+  # code's guards for them rather than trusting the docblock types.
+  treatPhpDocTypesAsCertain: false
   paths:
     - includes/
+  # BFST_* constants are defined in the main plugin file.
+  scanFiles:
+    - bluefairy-seo-toolkit.php
+  # PageContext::build() runs populate() straight after `new self()`; it is
+  # where the readonly properties are set, once each.
+  additionalConstructors:
+    - BlueFairy\SeoToolkit\PageContext::populate
   bootstrapFiles:
     - vendor/szepeviktor/phpstan-wordpress/bootstrap.php
     - vendor/php-stubs/woocommerce-stubs/woocommerce-stubs.php

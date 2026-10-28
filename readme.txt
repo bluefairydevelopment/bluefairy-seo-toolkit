@@ -116,6 +116,8 @@ Deleting the plugin through the Plugins screen removes every option it created a
 
 = 1.1.3 =
 * Fixed: deleting the plugin left its sitemap cache list in the database; it is now removed.
+* Fixed: on a site with a persistent object cache (Redis, Memcached), deleting the plugin left the cached sitemap pages in the cache; they are now removed.
+* Fixed: deleting the plugin also removed the Pro add-on's cached taxonomy sitemap pages; they are now left for Pro's own uninstall.
 * Maintenance: the code now meets the WordPress coding standards in full and every class method is covered by automated tests.
 
 = 1.1.2 =

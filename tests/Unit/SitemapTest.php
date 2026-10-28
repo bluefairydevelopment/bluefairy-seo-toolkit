@@ -311,4 +311,22 @@ final class SitemapTest extends TestCase {
 		[ $out ] = $run( "\$GLOBALS['bfst_wp']['query_vars']['bfst_sitemap'] = 'category'; add_filter( 'bfst_render_sitemap', static fn( \$o, \$s, \$p ) => \"<x s=\\\"\$s\\\" p=\\\"\$p\\\"/>\", 10, 3 );" );
 		$this->assertSame( '<x s="category" p="1"/>', $out );
 	}
+
+	public function test_the_cache_key_registry_is_capped_and_an_evicted_key_has_its_transient_deleted(): void {
+		$old = [];
+		for ( $i = 0; $i < SitemapManager::CACHE_INDEX_MAX; $i++ ) {
+			$old[] = 'bfst_sitemap_old' . $i;
+			set_transient( 'bfst_sitemap_old' . $i, 'x', DAY_IN_SECONDS );
+		}
+		update_option( 'bfst_sitemap_cache_keys', $old );
+
+		SitemapManager::remember_cache_key( 'bfst_sitemap_new' );
+
+		$keys = get_option( 'bfst_sitemap_cache_keys' );
+		$this->assertCount( SitemapManager::CACHE_INDEX_MAX, $keys );
+		$this->assertSame( 'bfst_sitemap_old1', $keys[0], 'the oldest key is dropped' );
+		$this->assertSame( 'bfst_sitemap_new', end( $keys ) );
+		$this->assertFalse( get_transient( 'bfst_sitemap_old0' ), 'an evicted key\'s transient is deleted, so nothing is left untracked' );
+		$this->assertSame( 'x', get_transient( 'bfst_sitemap_old1' ) );
+	}
 }
