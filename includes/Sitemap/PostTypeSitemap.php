@@ -290,7 +290,10 @@ class PostTypeSitemap {
 	 * @return string[]
 	 */
 	protected function home_url_lines( string $post_type, int $page, array $posts ): array {
-		if ( 'post' !== $post_type || 1 !== $page || 'page' === get_option( 'show_on_front' ) ) {
+		// A static front page needs both settings: with "a static page" chosen
+		// but none selected, WordPress still shows the latest posts.
+		$static_front = 'page' === get_option( 'show_on_front' ) && (int) get_option( 'page_on_front' ) > 0;
+		if ( 'post' !== $post_type || 1 !== $page || $static_front ) {
 			return [];
 		}
 

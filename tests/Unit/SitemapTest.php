@@ -130,6 +130,7 @@ final class SitemapTest extends TestCase {
 
 	public function test_post_type_sitemap_lists_each_post_with_escaped_loc_and_dates(): void {
 		update_option( 'show_on_front', 'page' ); // The home entry has its own test.
+		update_option( 'page_on_front', 9 );
 		$this->posts(
 			[ 'ID' => 1, 'post_modified_gmt' => gmdate( 'Y-m-d H:i:s', time() - 86400 ), 'url' => 'https://example.test/a?x=1&y=2' ],
 			[ 'ID' => 2, 'post_modified_gmt' => '2020-05-06 07:08:09', 'url' => '' ]
@@ -210,7 +211,11 @@ final class SitemapTest extends TestCase {
 		$this->assertStringNotContainsString( '<loc>https://example.test/</loc>', ( new PtsProbe() )->xml( 'post', 2 ) );
 		$this->assertStringNotContainsString( '<loc>https://example.test/</loc>', ( new PtsProbe() )->xml( 'page', 1 ) );
 		update_option( 'show_on_front', 'page' );
+		update_option( 'page_on_front', 9 );
 		$this->assertStringNotContainsString( '<loc>https://example.test/</loc>', ( new PtsProbe() )->xml( 'post', 1 ) );
+		// "A static page" chosen but none selected: WordPress shows the latest posts.
+		update_option( 'page_on_front', 0 );
+		$this->assertStringContainsString( '<loc>https://example.test/</loc>', ( new PtsProbe() )->xml( 'post', 1 ) );
 	}
 
 	public function test_an_empty_page_is_neither_served_nor_cached(): void {
