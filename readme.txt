@@ -112,7 +112,7 @@ Deleting the plugin through the Plugins screen removes every option it created a
 
 1. Settings → SEO — the two feature toggles and the sitemap exclusions list.
 2. The sitemap index at /sitemap_index.xml, listing the post and page sitemaps.
-3. The five Open Graph meta tags in a post's &lt;head&gt;.
+3. The six Open Graph meta tags in a post's &lt;head&gt;.
 
 == Changelog ==
 
