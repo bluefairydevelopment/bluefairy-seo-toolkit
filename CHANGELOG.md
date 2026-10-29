@@ -7,7 +7,7 @@ Versioning follows [Semantic Versioning](https://semver.org/): major = architect
 
 ---
 
-## [1.1.4] — Unreleased
+## [1.1.4] — 2026-10-28
 
 ### Changed
 - When the front page shows your latest posts, the home page is now listed in
