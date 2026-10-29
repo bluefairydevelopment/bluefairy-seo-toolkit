@@ -5,7 +5,7 @@ Tags: seo, open graph, sitemap, xml sitemap, social media
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 1.1.4
+Stable tag: 1.1.5
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -20,10 +20,11 @@ BlueFairy SEO Toolkit gives your WordPress site the two things it cannot do with
 **Open Graph tags output:**
 
 * `og:title` — post title, or site name on the homepage
-* `og:description` — post excerpt (fallback: first 55 words of content, then the site tagline)
+* `og:description` — post excerpt (fallback: first 55 words of content, then the site tagline); on a term archive, the term description only
 * `og:url` — the page URL, with tracking parameters stripped
 * `og:type` — `article` for posts, `product` for WooCommerce products, `website` for everything else
 * `og:site_name` — your site name
+* `og:locale` — the site language, for example `en_US`
 
 Tags are suppressed on 404, search results, and feed pages, where they would describe something that is not a real document.
 
@@ -111,9 +112,13 @@ Deleting the plugin through the Plugins screen removes every option it created a
 
 1. Settings → SEO — the two feature toggles and the sitemap exclusions list.
 2. The sitemap index at /sitemap_index.xml, listing the post and page sitemaps.
-3. The five Open Graph meta tags in a post's &lt;head&gt;.
+3. The six Open Graph meta tags in a post's &lt;head&gt;.
 
 == Changelog ==
+
+= 1.1.5 =
+* Added: `og:locale`, from the site language (for example `en_US`).
+* Changed: a category, tag or other term archive with no description of its own gets no `og:description`; it used to get the site tagline, so every such archive shared one description.
 
 = 1.1.4 =
 * Changed: when the front page shows your latest posts, the home page is now listed in its own sitemap, `/sitemap-frontpage-1.xml`, first in the index, even with no published posts or posts excluded. Sites with a static front page are unchanged.
@@ -152,13 +157,16 @@ Deleting the plugin through the Plugins screen removes every option it created a
 
 = 1.0.0 =
 * Initial release.
-* Open Graph tags: og:title, og:description, og:url, og:type, og:site_name.
+* Open Graph tags: og:title, og:description, og:url, og:type, og:site_name, og:locale.
 * Flat XML sitemap at /sitemap.xml with lastmod and changefreq.
 * Automatic conflict detection: Yoast SEO, Rank Math, SEOPress, The SEO Framework.
 * Admin notice when a conflict is detected.
 * 12-hour transient cache for the sitemap; invalidated on post save/delete/trash.
 
 == Upgrade Notice ==
+
+= 1.1.5 =
+Adds og:locale; term archives without a description no longer borrow the site tagline as og:description. Required by SEO Toolkit Pro 1.3.1.
 
 = 1.1.4 =
 The home page is now in the sitemap when the front page shows your latest posts, the sitemap index no longer lists an empty post type's sitemap, and deleting the plugin on a site with a persistent object cache (Redis, Memcached) now also removes its cached sitemap pages. No action required.

@@ -7,6 +7,18 @@ Versioning follows [Semantic Versioning](https://semver.org/): major = architect
 
 ---
 
+## [1.1.5] — Unreleased
+
+### Added
+- `og:locale`, set from the site language (for example `en_US`), on every
+  page that carries Open Graph tags.
+
+### Fixed
+- A category, tag or other term archive with no description of its own was
+  given the site tagline as its `og:description`, so every such archive shared
+  the same text. It now has no `og:description`; a term that has a description
+  still uses it.
+
 ## [1.1.4] — 2026-10-28
 
 ### Changed

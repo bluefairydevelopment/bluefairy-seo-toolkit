@@ -34,6 +34,7 @@ function bfst_wp_reset(): void {
 		'posts'          => [],
 		'unlocked'       => [],
 		'bloginfo'       => [ 'name' => 'Fixture Site', 'description' => 'Fixture tagline' ],
+		'locale'         => 'en_US',
 		'can'            => true,
 		'active_plugins' => [],
 		'wp_query'       => [ 'posts' => [], 'found_posts' => 0 ],
@@ -337,6 +338,7 @@ function rest_url(): string { return 'https://example.test/wp-json/'; }
 function plugins_url( string $path, string $file ): string { return 'https://example.test/wp-content/plugins/bluefairy-seo-toolkit/' . basename( $path ); }
 function plugin_basename( string $file ): string { return 'bluefairy-seo-toolkit/' . basename( $file ); }
 function get_the_title( $post ): string { return $post instanceof WP_Post ? $post->post_title : ''; }
+function get_locale(): string { return $GLOBALS['bfst_wp']['locale']; }
 function get_bloginfo( string $show = '' ): string { return $GLOBALS['bfst_wp']['bloginfo'][ $show ] ?? ''; }
 function post_password_required( $post ): bool {
 	return $post instanceof WP_Post && '' !== $post->post_password && empty( $GLOBALS['bfst_wp']['unlocked'][ $post->ID ] );
