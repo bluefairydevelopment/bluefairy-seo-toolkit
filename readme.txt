@@ -5,7 +5,7 @@ Tags: seo, open graph, sitemap, xml sitemap, social media
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 1.1.4
+Stable tag: 1.1.5
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -116,6 +116,10 @@ Deleting the plugin through the Plugins screen removes every option it created a
 
 == Changelog ==
 
+= 1.1.5 =
+* Added: `og:locale`, from the site language (for example `en_US`).
+* Changed: a category, tag or other term archive with no description of its own gets no `og:description`; it used to get the site tagline, so every such archive shared one description.
+
 = 1.1.4 =
 * Changed: when the front page shows your latest posts, the home page is now listed in its own sitemap, `/sitemap-frontpage-1.xml`, first in the index, even with no published posts or posts excluded. Sites with a static front page are unchanged.
 * Fixed: a post with an unset modification date showed `<lastmod>1970-01-01</lastmod>`; the tag is now left out.
@@ -160,6 +164,9 @@ Deleting the plugin through the Plugins screen removes every option it created a
 * 12-hour transient cache for the sitemap; invalidated on post save/delete/trash.
 
 == Upgrade Notice ==
+
+= 1.1.5 =
+Adds og:locale; term archives without a description no longer borrow the site tagline as og:description. Required by SEO Toolkit Pro 1.3.1.
 
 = 1.1.4 =
 The home page is now in the sitemap when the front page shows your latest posts, the sitemap index no longer lists an empty post type's sitemap, and deleting the plugin on a site with a persistent object cache (Redis, Memcached) now also removes its cached sitemap pages. No action required.

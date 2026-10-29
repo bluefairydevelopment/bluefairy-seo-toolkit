@@ -7,7 +7,7 @@ Versioning follows [Semantic Versioning](https://semver.org/): major = architect
 
 ---
 
-## [Unreleased]
+## [1.1.5] — Unreleased
 
 ### Added
 - `og:locale`, set from the site language (for example `en_US`), on every
