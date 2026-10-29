@@ -394,8 +394,8 @@ function wp_die( $msg = '', $title = '', $args = [] ): void {
 	$GLOBALS['bfst_wp']['wp_die'] = [ $msg, $title, $args ];
 	throw new BFST_Wp_Die( (string) $msg );
 }
-function is_plugin_active( string $file ): bool { return in_array( $file, $GLOBALS['bfst_wp']['active_plugins'], true ); }
-function deactivate_plugins( string $file ): void { $GLOBALS['bfst_wp']['deactivated'][] = $file; }
+// is_plugin_active() and deactivate_plugins() live in fixtures/wp-admin/includes/plugin.php,
+// which the code under test require_once's itself (ABSPATH = tests/fixtures/), as on the front end.
 function flush_rewrite_rules(): void { $GLOBALS['bfst_wp']['flushed']++; }
 function add_rewrite_rule( string $regex, string $query, string $after = 'bottom' ): void {
 	$GLOBALS['bfst_wp']['rewrite_rules'][ $regex ] = [ $query, $after ];

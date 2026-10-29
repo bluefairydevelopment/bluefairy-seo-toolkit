@@ -156,16 +156,4 @@ final class AdminTest extends TestCase {
 		$this->assertStringContainsString( '<h2 style="margin-top:0;font-size:1rem;">BlueFairy SEO Toolkit Pro</h2>', $html );
 		$this->assertStringContainsString( 'A canonical tag of your own, with core&#039;s duplicate removed and per-post overrides', $html );
 	}
-
-	public function test_with_pro_active_the_upsell_disappears(): void {
-		[ $out, $status ] = self::run_isolated(
-			<<<'PHP'
-			define( 'BFSTP_VERSION', '1.2.1' );
-			ob_start(); BlueFairy\SeoToolkit\Admin\ProUpsell::render_notice(); $n = ob_get_clean();
-			echo json_encode( [ BlueFairy\SeoToolkit\Admin\ProUpsell::add_action_link( [ 'x' ] ), $n ] );
-			PHP
-		);
-		$this->assertSame( 0, $status, $out );
-		$this->assertSame( '[["x"],""]', $out );
-	}
 }

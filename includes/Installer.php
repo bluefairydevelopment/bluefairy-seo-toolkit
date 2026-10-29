@@ -68,22 +68,24 @@ final class Installer {
 	}
 
 	/**
-	 * Enforce minimum PHP and WordPress version requirements.
-	 * Deactivates the plugin and dies with a user-friendly message if not met.
+	 * The unmet requirements, as messages for the site owner (none when both are met).
+	 *
+	 * @param string $php_version The running PHP version.
+	 * @param string $wp_version  The running WordPress version.
+	 * @return string[]
 	 */
-	private static function check_requirements(): void {
+	public static function requirement_errors( string $php_version, string $wp_version ): array {
 		$errors = [];
 
-		if ( version_compare( PHP_VERSION, self::MIN_PHP, '<' ) ) {
+		if ( version_compare( $php_version, self::MIN_PHP, '<' ) ) {
 			$errors[] = sprintf(
 				/* translators: 1: minimum PHP version, 2: current PHP version */
 				__( 'BlueFairy SEO Toolkit requires PHP %1$s or higher. You are running PHP %2$s.', 'bluefairy-seo-toolkit' ),
 				self::MIN_PHP,
-				PHP_VERSION
+				$php_version
 			);
 		}
 
-		global $wp_version;
 		if ( version_compare( $wp_version, self::MIN_WP, '<' ) ) {
 			$errors[] = sprintf(
 				/* translators: 1: minimum WP version, 2: current WP version */
@@ -92,6 +94,17 @@ final class Installer {
 				$wp_version
 			);
 		}
+
+		return $errors;
+	}
+
+	/**
+	 * Enforce minimum PHP and WordPress version requirements.
+	 * Deactivates the plugin and dies with a user-friendly message if not met.
+	 */
+	private static function check_requirements(): void {
+		global $wp_version;
+		$errors = self::requirement_errors( PHP_VERSION, (string) $wp_version );
 
 		if ( empty( $errors ) ) {
 			return;
