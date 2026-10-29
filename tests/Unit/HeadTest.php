@@ -49,7 +49,8 @@ final class HeadTest extends TestCase {
 			"<meta property=\"og:description\" content=\"Short &amp; sweet\">\n" .
 			"<meta property=\"og:url\" content=\"https://example.test/p/7/\">\n" .
 			"<meta property=\"og:type\" content=\"article\">\n" .
-			"<meta property=\"og:site_name\" content=\"Fixture Site\">\n",
+			"<meta property=\"og:site_name\" content=\"Fixture Site\">\n" .
+			"<meta property=\"og:locale\" content=\"en_US\">\n",
 			( new OpenGraphRenderer() )->render( $ctx )
 		);
 	}
@@ -102,6 +103,23 @@ final class HeadTest extends TestCase {
 		$this->assertSame( 'Fixture tagline', $r->description( $home ) );
 	}
 
+	public function test_a_term_without_a_description_has_none_never_the_tagline(): void {
+		$GLOBALS['bfst_wp']['queried'] = new \WP_Term( (object) [ 'term_id' => 5, 'name' => 'Laravel', 'description' => '' ] );
+		bfst_wp_cond( 'is_tag' );
+		$ctx = PageContext::build();
+		$this->assertSame( '', ( new OgProbe() )->description( $ctx ) );
+		$this->assertStringNotContainsString( 'og:description', ( new OpenGraphRenderer() )->render( $ctx ) );
+		$this->assertStringNotContainsString( 'Fixture tagline', ( new OpenGraphRenderer() )->render( $ctx ) );
+	}
+
+	public function test_og_locale_follows_the_site_locale_and_is_dropped_when_empty(): void {
+		$ctx = $this->singular( [ 'ID' => 3, 'post_title' => 'T' ] );
+		$GLOBALS['bfst_wp']['locale'] = 'de_DE';
+		$this->assertStringContainsString( '<meta property="og:locale" content="de_DE">', ( new OpenGraphRenderer() )->render( $ctx ) );
+		$GLOBALS['bfst_wp']['locale'] = '';
+		$this->assertStringNotContainsString( 'og:locale', ( new OpenGraphRenderer() )->render( $ctx ) );
+	}
+
 	public function test_a_locked_post_never_leaks_its_text_into_the_description(): void {
 		$r      = new OgProbe();
 		$locked = $this->singular( [ 'ID' => 9, 'post_password' => 'pw', 'post_excerpt' => 'SECRET excerpt', 'post_content' => 'SECRET body' ] );
@@ -127,7 +145,7 @@ final class HeadTest extends TestCase {
 		bfst_wp_cond( 'is_search' );
 		$ctx  = PageContext::build();
 		$tags = array_values( array_filter( ( new OgProbe() )->tags( $ctx ) ) );
-		$this->assertSame( [ '<meta property="og:description" content="D">', '<meta property="og:type" content="website">' ], $tags );
+		$this->assertSame( [ '<meta property="og:description" content="D">', '<meta property="og:type" content="website">', '<meta property="og:locale" content="en_US">' ], $tags );
 	}
 
 	public function test_the_og_renderer_is_keyed_og(): void {

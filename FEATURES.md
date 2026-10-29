@@ -10,15 +10,16 @@ no dashboard to learn and nothing you must configure before it starts working.
 
 ## Open Graph tags
 
-Five tags are written on every page where they make sense.
+Six tags are written on every page where they make sense.
 
 | Tag | Value |
 |---|---|
 | `og:title` | The post title. The site name on the front page. |
-| `og:description` | The post excerpt, falling back to the first 55 words of the content with tags and shortcodes stripped. The site tagline on the front page, and on a password-protected post, so its text never appears in the page head. |
+| `og:description` | The post excerpt, falling back to the first 55 words of the content with tags and shortcodes stripped. The site tagline on the front page, and on a password-protected post, so its text never appears in the page head. On a category, tag or other term archive, the term's own description; a term with no description gets no `og:description` (never the site tagline, which would give every such archive the same text). |
 | `og:url` | The canonical URL of the page, with tracking parameters removed (see below). On archives this is the archive itself: a post type archive such as the WooCommerce shop, a category, tag, author or date archive. |
 | `og:type` | `article` on singular post entries, `website` everywhere else. |
 | `og:site_name` | Your site name. |
+| `og:locale` | The site language setting, for example `en_US`. |
 
 Output is suppressed on 404 pages, search results and feeds, where these tags
 would describe something that is not a real document.
@@ -226,7 +227,7 @@ exactly what it does now.
 
 | Feature | SEO Toolkit Pro | SEO Toolkit (this plugin) |
 |---|---|---|
-| Open Graph: `og:title`, `og:description`, `og:url`, `og:type`, `og:site_name` | Yes | Yes |
+| Open Graph: `og:title`, `og:description`, `og:url`, `og:type`, `og:site_name`, `og:locale` | Yes | Yes |
 | `og:image`, with a five-step fallback chain | Yes | — |
 | Twitter Cards: `twitter:card`, `twitter:site` | Yes | — |
 | Article dates: `article:published_time`, `article:modified_time` | Yes | — |

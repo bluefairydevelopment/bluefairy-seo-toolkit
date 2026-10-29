@@ -143,6 +143,6 @@ final class PageContextTest extends TestCase {
 			PHP
 		);
 		$this->assertSame( 0, $status, $out );
-		$this->assertSame( '[true,true,"<meta property=\"og:type\" content=\"product\">\n<meta property=\"og:site_name\" content=\"Fixture Site\">\n"]', $out );
+		$this->assertSame( '[true,true,"<meta property=\"og:type\" content=\"product\">\n<meta property=\"og:site_name\" content=\"Fixture Site\">\n<meta property=\"og:locale\" content=\"en_US\">\n"]', $out );
 	}
 }

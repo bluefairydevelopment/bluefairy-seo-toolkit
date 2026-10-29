@@ -15,7 +15,7 @@ For the customer-facing feature list see `FEATURES.md`. For the Pro/free compari
 
 ## Features
 
-- **Open Graph tags** — `og:title`, `og:description`, `og:url`, `og:type`, `og:site_name`, suppressed on 404, search and feed pages. No `og:image`; that is a Pro feature.
+- **Open Graph tags** — `og:title`, `og:description`, `og:url`, `og:type`, `og:site_name`, `og:locale`, suppressed on 404, search and feed pages. No `og:image`; that is a Pro feature.
 - **XML sitemaps** — index at `/sitemap_index.xml`, per-post-type children at `/sitemap-{post-type}-{n}.xml`, paginated at 1,000 URLs per file, covering posts and pages.
 - **URL cleaning** — `utm_*`, `fbclid`, `gclid`, `attribute_pa_*`, WooCommerce filter and variation parameters, and WordPress comment parameters stripped before a URL is written.
 - **Conflict detection** — pauses all output when Yoast SEO, Rank Math, SEOPress, or The SEO Framework is active.

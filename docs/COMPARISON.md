@@ -9,7 +9,7 @@ Change a row here first, then rebuild every node.
 
 | Feature | SEO Toolkit Pro | SEO Toolkit (free) |
 |---|---|---|
-| Open Graph: `og:title`, `og:description`, `og:url`, `og:type`, `og:site_name` | Yes | Yes |
+| Open Graph: `og:title`, `og:description`, `og:url`, `og:type`, `og:site_name`, `og:locale` | Yes | Yes |
 | `og:image`, with a five-step fallback chain | Yes | — |
 | Twitter Cards: `twitter:card`, `twitter:site` | Yes | — |
 | Article dates: `article:published_time`, `article:modified_time` | Yes | — |

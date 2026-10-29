@@ -12,8 +12,8 @@ namespace BlueFairy\SeoToolkit\Head;
 use BlueFairy\SeoToolkit\PageContext;
 
 /**
- * Renders the base Open Graph tags: og:title, og:description, og:url, og:type
- * and og:site_name.
+ * Renders the base Open Graph tags: og:title, og:description, og:url, og:type,
+ * og:site_name and og:locale.
  *
  * Everything richer belongs to the Pro add-on and arrives through the
  * bfst_og_tags filter: og:image with its fallback chain, Twitter Card tags,
@@ -109,6 +109,9 @@ class OpenGraphRenderer implements RendererInterface {
 			$tags[] = $this->meta_tag( 'og:site_name', $site_name );
 		}
 
+		// -- og:locale -- (1.1.5) the site locale, e.g. en_US.
+		$tags[] = $this->meta_tag( 'og:locale', (string) get_locale() );
+
 		return $tags;
 	}
 
@@ -177,7 +180,10 @@ class OpenGraphRenderer implements RendererInterface {
 			// Auto-generate excerpt from content (strips shortcodes, HTML).
 			return wp_trim_words( wp_strip_all_tags( strip_shortcodes( $ctx->post->post_content ) ), 55 );
 		}
-		if ( $ctx->term instanceof \WP_Term && '' !== $ctx->term->description ) {
+		// A term archive describes itself or not at all (1.1.5). Falling back
+		// to the site tagline gave every undescribed tag and category the same
+		// og:description, which is no better than none.
+		if ( $ctx->term instanceof \WP_Term ) {
 			return wp_strip_all_tags( $ctx->term->description );
 		}
 		return wp_strip_all_tags( get_bloginfo( 'description' ) );

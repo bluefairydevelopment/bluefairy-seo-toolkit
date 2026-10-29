@@ -20,10 +20,11 @@ BlueFairy SEO Toolkit gives your WordPress site the two things it cannot do with
 **Open Graph tags output:**
 
 * `og:title` — post title, or site name on the homepage
-* `og:description` — post excerpt (fallback: first 55 words of content, then the site tagline)
+* `og:description` — post excerpt (fallback: first 55 words of content, then the site tagline); on a term archive, the term description only
 * `og:url` — the page URL, with tracking parameters stripped
 * `og:type` — `article` for posts, `product` for WooCommerce products, `website` for everything else
 * `og:site_name` — your site name
+* `og:locale` — the site language, for example `en_US`
 
 Tags are suppressed on 404, search results, and feed pages, where they would describe something that is not a real document.
 
@@ -152,7 +153,7 @@ Deleting the plugin through the Plugins screen removes every option it created a
 
 = 1.0.0 =
 * Initial release.
-* Open Graph tags: og:title, og:description, og:url, og:type, og:site_name.
+* Open Graph tags: og:title, og:description, og:url, og:type, og:site_name, og:locale.
 * Flat XML sitemap at /sitemap.xml with lastmod and changefreq.
 * Automatic conflict detection: Yoast SEO, Rank Math, SEOPress, The SEO Framework.
 * Admin notice when a conflict is detected.
