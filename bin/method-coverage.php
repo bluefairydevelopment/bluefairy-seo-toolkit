@@ -13,7 +13,8 @@
  *
  * Every method with a body counts: public, protected, private, constructors,
  * and functions declared outside a class. Abstract and interface methods have
- * no body and are not counted. Exit 1 when a method did not run, when the scan
+ * no body and are not counted. Every executable line under the tree is a
+ * gate as well: exit 1 when any line did not run, naming file:line. Exit 1 when a method did not run, when the scan
  * saw nothing, when the coverage holds no data for includes/, or when pcov is
  * not available (no measurement is a failure, not a pass).
  *
@@ -272,7 +273,11 @@ function bfcov_report( string $root, string $tool_root, ?string $coverage_file )
 		echo "method coverage: the pcov extension is not available to " . PHP_BINARY . " — nothing can be measured, so this is a failure, not a pass\n";
 		return 1;
 	}
+	// Classes live in includes/ (admin screens under includes/Admin); a top-level admin/ is measured too if one appears.
 	$methods = bfcov_methods( $root . '/includes' );
+	if ( [] !== $methods && is_dir( $root . '/admin' ) ) {
+		$methods = array_merge( $methods, bfcov_methods( $root . '/admin' ) );
+	}
 	if ( [] === $methods ) {
 		echo "method coverage: nothing scanned (no methods under {$root}/includes) — that is a failure, not a pass\n";
 		return 1;
@@ -320,20 +325,82 @@ function bfcov_report( string $root, string $tool_root, ?string $coverage_file )
 			}
 		}
 	}
-	printf( "%d methods/functions with a body in %d files under includes/ (measured by pcov line coverage)\n", $total, $files );
-	printf( "lines (information): %d/%d executable lines ran (%.1f%%)\n", $hit, $exec, $exec > 0 ? 100 * $hit / $exec : 0 );
+	printf( "%d methods/functions with a body in %d files under includes/ + admin/ (measured by pcov line coverage)\n", $total, $files );
+	$status = 0;
 	if ( 0 === $bad ) {
 		printf( "method coverage: %d/%d methods ran under tests/Unit\n", $total, $total );
-		return 0;
+	} else {
+		$status = 1;
+		printf( "method coverage: %d/%d ran; NOT RUN:\n", $total - $bad, $total );
+		foreach ( $result['missing'] as $m ) {
+			echo "  - {$m}\n";
+		}
+		foreach ( $result['unmeasured'] as $m ) {
+			echo "  - {$m} [no executable line recorded]\n";
+		}
 	}
-	printf( "method coverage: %d/%d ran; NOT RUN:\n", $total - $bad, $total );
-	foreach ( $result['missing'] as $m ) {
-		echo "  - {$m}\n";
+	// An ignored line is not measured, so every one is named: an exclusion
+	// must be visible in the report, never silent.
+	$ignored = bfcov_ignored_lines( $root );
+	printf( "excluded from line coverage: %d line(s) marked @codeCoverageIgnore%s\n", count( $ignored ), [] === $ignored ? '' : ': ' . implode( ', ', $ignored ) );
+	// Lines are a gate too: a method can run while a branch inside it never does.
+	if ( $hit === $exec && $exec > 0 ) {
+		printf( "line coverage: %d/%d executable lines ran (100%%)\n", $hit, $exec );
+		return $status;
 	}
-	foreach ( $result['unmeasured'] as $m ) {
-		echo "  - {$m} [no executable line recorded]\n";
+	printf( "line coverage: %d/%d executable lines ran (%.1f%%); NOT RUN:\n", $hit, $exec, $exec > 0 ? 100 * $hit / $exec : 0 );
+	foreach ( bfcov_unrun_lines( $lines, $root ) as $file => $numbers ) {
+		echo "  - {$file}:" . implode( ',', $numbers ) . "\n";
 	}
 	return 1;
+}
+
+/**
+ * Every line under includes/ and admin/ carrying @codeCoverageIgnore, as file:line.
+ *
+ * @return list<string>
+ */
+function bfcov_ignored_lines( string $root ): array {
+	$out = [];
+	foreach ( [ 'includes', 'admin' ] as $sub ) {
+		if ( ! is_dir( $root . '/' . $sub ) ) {
+			continue;
+		}
+		foreach ( new RecursiveIteratorIterator( new RecursiveDirectoryIterator( $root . '/' . $sub, FilesystemIterator::SKIP_DOTS ) ) as $file ) {
+			if ( ! $file instanceof SplFileInfo || 'php' !== $file->getExtension() ) {
+				continue;
+			}
+			foreach ( (array) file( $file->getPathname() ) as $i => $line ) {
+				if ( str_contains( (string) $line, '@codeCoverageIgnore' ) && ! str_contains( (string) $line, '@codeCoverageIgnoreEnd' ) ) {
+					$out[] = substr( $file->getPathname(), strlen( $root ) + 1 ) . ':' . ( $i + 1 );
+				}
+			}
+		}
+	}
+	sort( $out );
+	return $out;
+}
+
+/**
+ * Executable lines under $root that never ran, by file.
+ *
+ * @param array<string, array<int, array<int, string>|null>> $lines
+ * @return array<string, list<int>>
+ */
+function bfcov_unrun_lines( array $lines, string $root ): array {
+	$out = [];
+	foreach ( $lines as $file => $per_line ) {
+		if ( ! str_starts_with( (string) $file, $root . '/' ) && ! str_starts_with( (string) $file, (string) realpath( $root ) . '/' ) ) {
+			continue;
+		}
+		foreach ( $per_line as $line => $tests ) {
+			if ( [] === $tests ) {
+				$out[ (string) $file ][] = (int) $line;
+			}
+		}
+	}
+	ksort( $out );
+	return $out;
 }
 
 /**
@@ -351,7 +418,7 @@ function bfcov_self_check( string $tool_root ): int {
 	$scratch = sys_get_temp_dir() . '/bfcov-self-' . getmypid();
 	@mkdir( $scratch . '/includes/Sub', 0777, true );
 	@mkdir( $scratch . '/tests/Unit', 0777, true );
-	file_put_contents( $scratch . '/includes/Alpha.php', "<?php\nnamespace Fx;\nfinal class Alpha {\n\tpublic function render(): string {\n\t\treturn 'a';\n\t}\n}\n" );
+	file_put_contents( $scratch . '/includes/Alpha.php', "<?php\nnamespace Fx;\nfinal class Alpha {\n\tpublic function render(): string {\n\t\tif ( func_num_args() > 5 ) {\n\t\t\treturn 'z';\n\t\t}\n\t\treturn 'a';\n\t}\n}\n" );
 	file_put_contents( $scratch . '/includes/Sub/Beta.php', "<?php\nnamespace Fx;\nabstract class Base { abstract public function shape(): string; }\ninterface Shows { public function show(): void; }\nclass Beta extends Base {\n\tpublic function render(): string {\n\t\treturn \$this->helper();\n\t}\n\tprivate function helper(): string {\n\t\t\$f = function () { return 'b'; };\n\t\treturn \$f();\n\t}\n\tpublic function shape(): string { return Beta::class; }\n\tpublic function list(): array { return []; }\n}\nfunction loose(): int {\n\treturn 1;\n}\n" );
 	file_put_contents( $scratch . '/tests/bootstrap.php', "<?php\nrequire __DIR__ . '/../includes/Alpha.php';\nrequire __DIR__ . '/../includes/Sub/Beta.php';\n" );
 	file_put_contents( $scratch . '/tests/Unit/AlphaTest.php', "<?php\nuse PHPUnit\\Framework\\TestCase;\nfinal class AlphaTest extends TestCase {\n\tpublic function test_render(): void {\n\t\t\$this->assertSame( 'a', ( new Fx\\Alpha() )->render() );\n\t\t\$this->assertSame( 'shape', 'shape' );\n\t\t\$this->assertSame( 1, \\Fx\\loose() );\n\t\t\$cb = [ 'x', 'helper' ];\n\t\t\$this->assertCount( 2, \$cb );\n\t}\n}\n" );
@@ -375,7 +442,14 @@ function bfcov_self_check( string $tool_root ): int {
 	ob_start();
 	$status = bfcov_report( (string) realpath( $scratch ), $tool_root, null );
 	$report = (string) ob_get_clean();
-	$say( 0 === $status && str_contains( $report, 'method coverage: 6/6 methods ran' ), "cured plant passes: exit {$status}, 6/6" );
+	$say( 1 === $status && str_contains( $report, 'method coverage: 6/6 methods ran' ) && str_contains( $report, 'Alpha.php:6' ), "every method ran but a planted branch line did not: exit {$status} (want 1), Alpha.php:6 named" );
+
+	// 3b. Cure the line gap too → exit 0, every line.
+	file_put_contents( $scratch . '/tests/Unit/AlphaBranchTest.php', "<?php\nuse PHPUnit\\Framework\\TestCase;\nfinal class AlphaBranchTest extends TestCase {\n\tpublic function test_branch(): void {\n\t\t\$this->assertSame( 'z', ( new Fx\\Alpha() )->render( 1, 2, 3, 4, 5, 6 ) );\n\t}\n}\n" );
+	ob_start();
+	$status = bfcov_report( (string) realpath( $scratch ), $tool_root, null );
+	$report = (string) ob_get_clean();
+	$say( 0 === $status && str_contains( $report, 'method coverage: 6/6 methods ran' ) && str_contains( $report, '(100%)' ), "cured plant passes: exit {$status}, 6/6 methods and 100% lines" );
 
 	// 4. A failing suite is not counted.
 	file_put_contents( $scratch . '/tests/Unit/RedTest.php', "<?php\nuse PHPUnit\\Framework\\TestCase;\nfinal class RedTest extends TestCase {\n\tpublic function test_red(): void {\n\t\t\$this->assertTrue( false );\n\t}\n}\n" );
@@ -397,7 +471,7 @@ function bfcov_self_check( string $tool_root ): int {
 	$say( 1 === $no_pcov_status && str_contains( implode( "\n", $no_pcov_out ), 'pcov' ), "without pcov: exit {$no_pcov_status} (want 1)" );
 
 	exec( 'rm -rf ' . escapeshellarg( $scratch ) );
-	echo $ok ? "self-check: planted untested same-named method caught; failing suite, empty tree and missing pcov all fail\n" : "self-check: FAILED\n";
+	echo $ok ? "self-check: planted untested same-named method and planted unrun branch line caught; failing suite, empty tree and missing pcov all fail\n" : "self-check: FAILED\n";
 	return $ok ? 0 : 1;
 }
 

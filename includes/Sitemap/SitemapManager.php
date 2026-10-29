@@ -347,41 +347,56 @@ class SitemapManager {
 			return;
 		}
 
-		$page = max( 1, (int) get_query_var( 'bfst_sitemap_page', 1 ) );
-
-		// Set XML content type headers before any output.
-		if ( ! headers_sent() ) {
-			header( 'Content-Type: application/xml; charset=UTF-8' );
-			header( 'X-Robots-Tag: noindex, follow' );
-		}
-
-		if ( 'index' === $sitemap ) {
-			$class   = self::$handlers['index'];
-			$handler = new $class();
-			echo $handler->render(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- XML output
+		$output = self::sitemap_output( (string) $sitemap, max( 1, (int) get_query_var( 'bfst_sitemap_page', 1 ) ) );
+		if ( null !== $output ) {
+			// Send, then stop WordPress loading a theme template after it. The exit
+			// ends the process, so pcov cannot record these two lines; their behaviour
+			// is proven in a subprocess by SitemapTest::test_route_serves_the_index_a_post_page_and_filtered_kinds_then_exits.
+			// phpcs:disable Squiz.Commenting.InlineComment.InvalidEndChar -- coverage markers take no punctuation.
+			// @codeCoverageIgnoreStart
+			self::send_xml( $output );
 			exit;
+			// @codeCoverageIgnoreEnd
+			// phpcs:enable Squiz.Commenting.InlineComment.InvalidEndChar
 		}
 
-		// The home page's own sitemap (1.1.4), unless a post type took the name.
+		// Unknown sitemap type — return 404.
+		global $wp_query;
+		$wp_query->set_404();
+		status_header( 404 );
+	}
+
+	/**
+	 * The XML for a sitemap request, or null when there is none to serve.
+	 *
+	 * The index, the home page's own sitemap (1.1.4, unless a post type took
+	 * the name), a post type's page, then any kind an add-on renders through
+	 * bfst_render_sitemap. An empty render means the page is past the end of
+	 * that sitemap, which must be a 404 rather than an empty 200 (that is what
+	 * let /sitemap-post-900001.xml look like a real page).
+	 *
+	 * @param string $sitemap Requested sitemap name.
+	 * @param int    $page    Page number, 1-based.
+	 * @return string|null
+	 */
+	public static function sitemap_output( string $sitemap, int $page ): ?string {
+		if ( 'index' === $sitemap ) {
+			$class = self::$handlers['index'];
+			return ( new $class() )->render();
+		}
+
 		if ( HomeSitemap::NAME === $sitemap && ! in_array( $sitemap, self::post_types(), true ) ) {
 			$output = ( new HomeSitemap() )->render( $page );
 			if ( '' !== $output ) {
-				echo $output; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- XML output
-				exit;
+				return $output;
 			}
 		}
 
 		if ( in_array( $sitemap, self::post_types(), true ) ) {
-			$class   = self::$handlers['post_type'];
-			$handler = new $class();
-			$output  = $handler->render( $sitemap, $page );
-
-			// An empty string means the page is past the end of the sitemap.
-			// Fall through to the 404 below rather than serving an empty 200,
-			// which is what let /sitemap-post-900001.xml look like a real page.
+			$class  = self::$handlers['post_type'];
+			$output = ( new $class() )->render( $sitemap, $page );
 			if ( '' !== $output ) {
-				echo $output; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- XML output
-				exit;
+				return $output;
 			}
 		}
 
@@ -389,7 +404,7 @@ class SitemapManager {
 		 * Render a sitemap kind the base plugin does not know about.
 		 *
 		 * The Pro add-on serves taxonomy sitemaps from here. Return a string to
-		 * output it; return null to fall through to the 404 below.
+		 * output it; return null to fall through to the 404.
 		 *
 		 * @since 1.1.0
 		 *
@@ -398,14 +413,19 @@ class SitemapManager {
 		 * @param int         $page    Page number, 1-based.
 		 */
 		$output = apply_filters( 'bfst_render_sitemap', null, $sitemap, $page );
-		if ( is_string( $output ) && '' !== $output ) {
-			echo $output; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- XML output
-			exit;
-		}
+		return is_string( $output ) && '' !== $output ? $output : null;
+	}
 
-		// Unknown sitemap type — return 404.
-		global $wp_query;
-		$wp_query->set_404();
-		status_header( 404 );
+	/**
+	 * Print a sitemap with its XML headers (when headers can still be sent).
+	 *
+	 * @param string $output Rendered XML.
+	 */
+	public static function send_xml( string $output ): void {
+		if ( ! headers_sent() ) {
+			header( 'Content-Type: application/xml; charset=UTF-8' );
+			header( 'X-Robots-Tag: noindex, follow' );
+		}
+		echo $output; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- XML output
 	}
 }

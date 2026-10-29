@@ -10,9 +10,7 @@
 
 declare(strict_types=1);
 
-if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
-	exit;
-}
+defined( 'WP_UNINSTALL_PLUGIN' ) || exit;
 
 // Every option this plugin creates, and nothing else. Installer::set_default_options()
 // and this list must stay equal in both directions: an option created and not
@@ -27,8 +25,7 @@ $bfst_option_keys = [
 ];
 
 // The base plugin writes no post meta — the per-post SEO meta box belongs to
-// the Pro add-on, which removes these keys in its own uninstall.
-$bfst_meta_keys = [];
+// the Pro add-on, which removes its keys in its own uninstall.
 
 // Multisite awareness: page through EVERY site.
 //
@@ -93,10 +90,6 @@ foreach ( $bfst_site_ids as $bfst_site ) {
 			$wpdb->esc_like( '_transient_timeout_bfst_sitemap_' ) . '%'
 		)
 	);
-
-	foreach ( $bfst_meta_keys as $bfst_meta_key ) {
-		delete_post_meta_by_key( $bfst_meta_key );
-	}
 
 	if ( $bfst_site ) {
 		restore_current_blog();
