@@ -3,6 +3,7 @@
 # shipped readme; README.md and the raw screenshots are the repository's.
 /.distignore
 /README.md
+/FEATURES.md
 /docs/COMPARISON.md
 /docs/MARKETING.txt
 /bin/
